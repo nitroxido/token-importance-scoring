@@ -51,8 +51,8 @@ python -c "from token_importance.model.importance_head import ImportanceUpdateHe
 │   ├── train_ert.py           # ERT training
 │   ├── eval.py                # Benchmark evaluation
 │   └── ...                    # Additional utilities
-├── docs/                       # Internal development notes (not for release)
-└── *.md                        # Documentation files
+├── *.md                        # Documentation files
+└── *.png                       # Images for documentation files
 ```
 
 ## Core Features
@@ -134,12 +134,12 @@ python scripts/eval.py \
 
 ## Acknowledgments
 
-- **GPU-Action**: Sponsored A100-80GB access for comprehensive validation
+- **GPU-Action** (https://gpu-action.com/): Sponsored A100-80GB access for comprehensive validation
 - **Consumer Hardware**: NVIDIA RTX 5070 testing for reproducibility
 
 ## License
 
-[Specify License]
+MIT
 
 ## Contributing
 

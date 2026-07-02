@@ -205,10 +205,11 @@ for name, ckpt in checkpoints.items():
         print(f"\n  Running {benchmark.upper()}...")
         result = subprocess.run([
             'python', 'scripts/eval.py',
-            '--model_id', ckpt,
+            '--model', ckpt,
+            '--baseline', 'tis',
             '--benchmark', benchmark,
-            '--budget_fractions', *map(str, budgets),
-            '--output_dir', f'./results/{benchmark}_{name.lower().replace(" ", "_")}'
+            '--cache_budgets', *map(str, budgets),
+            '--output', f'./results/{benchmark}_{name.lower().replace(" ", "_")}.csv'
         ])
         
         if result.returncode == 0:
@@ -232,19 +233,19 @@ python << 'EOF'
 from token_importance.eval.baselines import BaselineComparison
 from token_importance.eval.benchmarks import NIAH, LITM
 
-comp = BaselineComparison(model_id='./models/mistral-7b-v0.3')
+comp = BaselineComparison(model_path='./models/mistral-7b-v0.3')
 
 # Run all baselines on NIAH
 niah_results = comp.evaluate_all_methods(
     benchmark='niah',
-    budget_fractions=[0.25, 0.5, 0.75, 1.0],
+    cache_budgets=[0.25, 0.5, 0.75, 1.0],
     methods=['vanilla', 'streamingllm', 'h2o', 'snapkv', 'infini_attn']
 )
 
 # Run all baselines on LITM
 litm_results = comp.evaluate_all_methods(
     benchmark='litm',
-    budget_fractions=[0.25, 0.5, 0.75, 1.0],
+    cache_budgets=[0.25, 0.5, 0.75, 1.0],
     methods=['vanilla', 'streamingllm', 'h2o', 'snapkv', 'infini_attn']
 )
 
@@ -371,8 +372,8 @@ After completing all steps, verify:
 
 ### Q: Evaluation takes forever
 **A:** 
-- Evaluate on subset first: `--benchmark niah --budget_fractions 0.5`
-- Use smaller context windows for development: `--max_length 4096`
+- Evaluate on subset first: `--benchmark niah --cache_budgets 0.5 --n_samples 10`
+- Use smaller context windows for development: (context length is set per benchmark)
 - Run in parallel on multiple GPUs if available
 
 ## Next Steps

@@ -99,29 +99,25 @@ python -c "from src.token_importance.training.msmarco_data import download_msmar
 This uses the working configuration from the baseline checkpoint:
 
 ```bash
+# Note: Adapt parameters based on actual train_ert.py interface
+# Check available parameters with: python scripts/train_ert.py --help
 python scripts/train_ert.py \
-  --model_id mistralai/Mistral-7B-v0.3 \
-  --output_dir checkpoints/stage3_ert_fresh \
-  --batch_size 1 \
-  --gradient_accumulation_steps 8 \
-  --num_train_epochs 3 \
-  --learning_rate 5e-4 \
-  --use_rms_norm \
-  --use_hard_anchor_forcing \
-  --stability_loss_weight 0.1 \
-  --kl_divergence_weight 1.0 \
-  --alignment_weight 0.3 \
-  --mixed_precision bfloat16
+  --target-model mistralai/Mistral-7B-v0.3 \
+  --output-dir checkpoints/stage3_ert_fresh \
+  --batch-size 1 \
+  --grad-accumulation 8 \
+  --learning-rate 5e-4 \
+  --dtype bfloat16
+
+# See scripts/train_ert.py for full parameter list
 ```
 
 **Key parameters:**
-- `batch_size 1` (non-negotiable for RTX 5070, adjust for your hardware)
-- `gradient_accumulation_steps 8` (effective batch size 8)
-- `use_rms_norm` (Layer norm after residual - critical for stability)
-- `use_hard_anchor_forcing` (Deterministic query/evidence preservation)
-- `--mixed_precision bfloat16` (Reduces VRAM usage)
+- `--batch-size 1` (for limited GPU memory)
+- `--grad-accumulation 8` (effective batch size 8)
+- `--dtype bfloat16` (reduces VRAM usage)
 
-**Expected results after ~45 min per 500 steps:**
+**Expected results** (after training):
 - NIAH @ 50%: ~100%
 - LITM @ 50%: ~53%
 - Generation quality: ~67%
@@ -129,25 +125,30 @@ python scripts/train_ert.py \
 ### 3. Evaluate on Benchmarks
 
 ```bash
-# Evaluate trained checkpoint on all benchmarks
+# Evaluate trained checkpoint on NIAH benchmark
 python scripts/eval.py \
-  --model_id checkpoints/stage3_ert_fresh \
-  --benchmark niah litm multidoc \
-  --budgets 25 50 75 100 \
-  --output_dir results/v8b_evaluation
+  --model checkpoints/stage3_ert_fresh \
+  --baseline tis \
+  --benchmark niah \
+  --cache_budgets 0.25 0.5 0.75 1.0 \
+  --output results/niah_evaluation.csv
 
 # View results
-cat results/v8b_evaluation/summary.json
+cat results/niah_evaluation.csv
 ```
 
 ### 4. Compare with Baselines
 
-```bash
-# Run baseline comparison (Vanilla, StreamingLLM, H2O, SnapKV, Infini-Attention)
-python scripts/compare_baselines.py \
-  --model_id mistralai/Mistral-7B-v0.3 \
-  --methods vanilla streamingllm h2o snapkv infini_attn \
-  --benchmark niah litm \
+```bashuse eval.py with different baselines)
+python scripts/eval.py \
+  --model mistralai/Mistral-7B-v0.3 \
+  --baseline vanilla \
+  --benchmark niah \
+  --cache_budgets 0.5 \
+  --n_samples 10 \
+  --output results/vanilla_baseline.csv
+
+# Repeat for other baselines: h2o, streamingllm, snapkv, infini_attenti
   --output_dir results/baseline_comparison
 ```
 
@@ -266,7 +267,7 @@ If you use this code, please cite:
 
 ## License
 
-[Specify appropriate license]
+MIT License - see [LICENSE](../LICENSE) file for details
 
 ## Support
 

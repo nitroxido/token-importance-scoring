@@ -273,7 +273,7 @@ python scripts/train_stage3_ert.py --steps 10000 --output-dir my_checkpoint
 
 **Current Status**: Publication-ready  
 **Release Date**: June 2026  
-**License**: [Specify license]
+**License**: MIT
 
 ---
 
