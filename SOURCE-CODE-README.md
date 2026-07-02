@@ -149,7 +149,7 @@ python scripts/eval.py \
   --output results/vanilla_baseline.csv
 
 # Repeat for other baselines: h2o, streamingllm, snapkv, infini_attenti
-  --output_dir results/baseline_comparison
+
 ```
 
 ## Architecture Details
