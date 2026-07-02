@@ -122,17 +122,12 @@ source .venv/bin/activate
 cd $PROJECT_DIR/rebuild
 
 python scripts/train_ert.py \
-  --model_id ./models/mistral-7b-v0.3 \
-  --output_dir ./checkpoints/stage3_ert_from_scratch \
-  --num_train_epochs 3 \
-  --learning_rate 5e-4 \
-  --batch_size 1 \
-  --gradient_accumulation_steps 8 \
-  --mixed_precision bfloat16 \
-  --use_rms_norm \
-  --use_hard_anchor_forcing \
-  --stability_loss_weight 0.1 \
-  --kl_divergence_weight 1.0 \
+  --target-model mistralai/Mistral-7B-v0.3 \
+  --output-dir ./checkpoints/stage3_ert_from_scratch \
+  --learning-rate 5e-4 \
+  --batch-size 1 \
+  --grad-accumulation 8 \
+  --dtype bfloat16
   --alignment_weight 0.3 \
   --save_total_limit 3 \
   --logging_steps 10
