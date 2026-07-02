@@ -1,0 +1,247 @@
+# Token Importance Scoring - Project-Specific .gitignore
+# This repository is for sharing reproducible research code and documentation
+# Excludes large binary files, generated data, and internal development notes
+
+# ============================================================================
+# Compressed Archives (Large binary files not suitable for Git)
+# ============================================================================
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.tar.bz2
+*.tar.xz
+*.rar
+*.7z
+*.gz
+*.bz2
+*.xz
+
+# ============================================================================
+# Python Environment & Dependencies
+# ============================================================================
+# Virtual environments (researchers should create their own)
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# IPython
+profile_default/
+ipython_config.py
+
+# ============================================================================
+# Model Checkpoints & Large Model Files (Download separately)
+# ============================================================================
+checkpoints/
+*.bin
+*.safetensors
+*.ckpt
+*.pth
+*.pt
+*.h5
+*.hdf5
+*.pb
+*.onnx
+models/
+!scripts/
+!src/
+
+# ============================================================================
+# Dataset & Generated Data (Regenerate using provided scripts)
+# ============================================================================
+data/
+datasets/
+*.jsonl
+*.json.gz
+*.parquet
+*.arrow
+*.feather
+
+# Exceptions: Keep example configs and metadata
+!**/example_*.json
+!**/config.json
+!**/dataset_info.json
+
+# ============================================================================
+# Results & Outputs (Generated during evaluation)
+# ============================================================================
+results/
+outputs/
+logs/
+runs/
+wandb/
+mlruns/
+*.log
+*.out
+*.err
+
+# Tensorboard
+events.out.tfevents.*
+
+# ============================================================================
+# Internal Development Notes (docs/ folder for internal use only)
+# ============================================================================
+docs/
+*.draft.md
+*.wip.md
+*.notes.md
+.notes/
+TODO.md
+SCRATCH.md
+
+# ============================================================================
+# IDE & Editor Files
+# ============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============================================================================
+# Temporary Files
+# ============================================================================
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# ============================================================================
+# Git & Version Control
+# ============================================================================
+*.orig
+*.rej
+
+# ============================================================================
+# OS-Specific Files
+# ============================================================================
+# Linux
+*~
+.directory
+.Trash-*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ============================================================================
+# KEEP THESE FILES (Explicit exceptions to above rules)
+# ============================================================================
+# All markdown documentation in root (for public sharing)
+!/*.md
+!REPOSITORY-OVERVIEW.md
+!PACKAGE-MANIFEST.md
+!RELEASE-NOTES.md
+!REPRODUCIBILITY-GUIDE.md
+!REBUILD-INSTRUCTIONS.md
+!PROJECT-EVOLUTION-REPORT.md
+!ARCHITECTURE-TECHNICAL-SPECS.md
+!ATTENTION-DRIFT-ANALYSIS.md
+!CHECKPOINT_AND_DATA_DOWNLOADS.md
+!MASTER-EXECUTION-PLAN-PHASE4-COMPLETE.md
+!PACKAGE-CONTENTS.md
+!PHASE-A-BASELINE-TESTING.md
+!PHASE-B-ATTENTION-DRIFT.md
+!PHASE-C-QUERY-AWARE-IMPLEMENTATION.md
+!PHASE4-PROPOSAL.md
+!PHASE4-REPRODUCTION-GUIDE.md
+!SOURCE-CODE-README.md
+!README.md
+
+# Keep all Python source code
+!src/**/*.py
+!scripts/**/*.py
+!tests/**/*.py
+
+# Keep project configuration
+!pyproject.toml
+!setup.py
+!setup.cfg
+!requirements.txt
+!.env.example
+
+# Keep diagrams and images in root (publication-ready figures)
+!*.png
+!*.jpg
+!*.jpeg
+!*.svg
+!*.pdf
+
+# ============================================================================
+# Project-Specific Notes
+# ============================================================================
+# This .gitignore is designed for the Token Importance Scoring research project
+# Rationale:
+# - Excludes compressed archives (token-importance-source-code.tar.gz, etc.)
+# - Excludes model checkpoints (users should download or train themselves)
+# - Excludes generated data (reproducible via provided scripts)
+# - Excludes internal development notes (docs/ folder)
+# - Keeps all public-facing documentation (.md files in root)
+# - Keeps all source code (src/, scripts/, tests/)
+# - Keeps configuration files for reproducibility

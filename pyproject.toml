@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "token-importance"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.4.0",
+    "transformers>=5.10",
+    "peft>=0.11",
+    "datasets",
+    "numpy",
+    "pytest",
+]
+
+[project.optional-dependencies]
+dev = ["jupyter", "matplotlib"]
+scout = ["ollama"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m not slow')",
+]
