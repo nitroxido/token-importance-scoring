@@ -140,18 +140,28 @@ python scripts/train_ert.py \
 - Generation quality: ~67%
 
 Note: Training scripts and their parameters may require adjustment based on the specific implementation. Consult the scripts/ directory for available training scripts and their actual command-line interfaces.
-pre-trained checkpoints:
+
+**Alternative: Download Pre-trained Checkpoint**
+
+To skip training (~45 minutes), download from HuggingFace:
 
 ```bash
 # Ensure virtual environment is activated
 source .venv/bin/activate
 
-# If available from a model hub:
-# huggingface-cli download [model-path] --local-dir ./checkpoints/stage3_ert_baseline
+# Download main ERT checkpoint
+hf download oldman-dev/tis-stage3-ert \
+  --local-dir ./checkpoints/stage3_ert_learned
+
+# Or download hard-anchor checkpoint
+hf download oldman-dev/tis-v8b-hard-anchor \
+  --local-dir ./checkpoints/v8b_hard_anchor
 ```
 
-This skips training time
-```
+**Available checkpoints:**
+- [oldman-dev/tis-stage3-ert](https://huggingface.co/oldman-dev/tis-stage3-ert) - Main ERT (100% NIAH)
+- [oldman-dev/tis-v8b-hard-anchor](https://huggingface.co/oldman-dev/tis-v8b-hard-anchor) - Hard-anchor (82% NIAH @ 25%)
+- [oldman-dev/tis-stage1-oracle](https://huggingface.co/oldman-dev/tis-stage1-oracle) - Oracle baseline
 
 This skips ~45 minutes of training but still requires evaluation.
 

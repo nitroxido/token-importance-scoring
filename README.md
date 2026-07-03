@@ -14,7 +14,7 @@ Token Importance Scoring (TIS) achieves:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/token-importance-scoring.git
+git clone https://github.com/nitroxido/token-importance-scoring.git
 cd token-importance-scoring
 
 # Create and activate virtual environment
@@ -28,6 +28,29 @@ pip install -e .
 # Verify installation
 python -c "from token_importance.model.importance_head import ImportanceUpdateHead; print('✓ Package installed')"
 ```
+
+## Pre-trained Checkpoints
+
+Download pre-trained TIS models from HuggingFace:
+
+```bash
+# Main checkpoint (recommended) - 100% NIAH, 52.8% LITM
+hf download oldman-dev/tis-stage3-ert \
+  --local-dir checkpoints/stage3_ert_learned
+
+# Hard-anchor checkpoint - 82% NIAH @ 25%
+hf download oldman-dev/tis-v8b-hard-anchor \
+  --local-dir checkpoints/v8b_hard_anchor
+
+# Oracle baseline - theoretical ceiling
+hf download oldman-dev/tis-stage1-oracle \
+  --local-dir checkpoints/stage1_oracle
+```
+
+**Available Models:**
+- **[tis-stage3-ert](https://huggingface.co/oldman-dev/tis-stage3-ert)**: Main ERT checkpoint (257 MB)
+- **[tis-v8b-hard-anchor](https://huggingface.co/oldman-dev/tis-v8b-hard-anchor)**: Publication checkpoint (257 MB)  
+- **[tis-stage1-oracle](https://huggingface.co/oldman-dev/tis-stage1-oracle)**: Oracle baseline (259 MB)
 
 ## Documentation
 

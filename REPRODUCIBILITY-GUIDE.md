@@ -103,6 +103,31 @@ data/
 
 ## Part 3: Reproduction Workflows
 
+### 3.0 Download Pre-trained Checkpoints (Optional)
+
+**Goal**: Skip training by using pre-trained models.
+
+```bash
+# Activate virtual environment
+source .venv/bin/activate
+
+# Download main ERT checkpoint (recommended)
+hf download oldman-dev/tis-stage3-ert \
+  --local-dir checkpoints/stage3_ert_learned
+
+# Optional: Download additional checkpoints
+hf download oldman-dev/tis-v8b-hard-anchor \
+  --local-dir checkpoints/v8b_hard_anchor
+
+hf download oldman-dev/tis-stage1-oracle \
+  --local-dir checkpoints/stage1_oracle
+```
+
+**Available Models:**
+- [tis-stage3-ert](https://huggingface.co/oldman-dev/tis-stage3-ert): Main checkpoint (100% NIAH, 52.8% LITM)
+- [tis-v8b-hard-anchor](https://huggingface.co/oldman-dev/tis-v8b-hard-anchor): Hard-anchor checkpoint (82% NIAH @ 25%)
+- [tis-stage1-oracle](https://huggingface.co/oldman-dev/tis-stage1-oracle): Oracle baseline
+
 ### 3.1 Quick Validation (20 minutes)
 
 **Goal**: Verify everything loads without errors.
@@ -116,9 +141,9 @@ model = AutoModelForCausalLM.from_pretrained('mistralai/Mistral-7B-v0.3',
 tokenizer = AutoTokenizer.from_pretrained('mistralai/Mistral-7B-v0.3')
 print('Base model loads successfully')
 
-# Load checkpoint
+# Load checkpoint (after downloading from HuggingFace)
 import torch
-ckpt = torch.load('checkpoints/stage3_ert_learned/pytorch_model.bin')
+ckpt = torch.load('checkpoints/stage3_ert_learned/tis_components.pt')
 print(f'Checkpoint loaded: {len(ckpt)} parameters')
 "
 ```
