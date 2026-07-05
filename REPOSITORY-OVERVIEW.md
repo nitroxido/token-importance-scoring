@@ -181,13 +181,12 @@ Key insight: For specialized objectives, task-aligned loss functions combined wi
 
 Pre-trained checkpoints available on HuggingFace:
 
-- **[tis-stage3-ert](https://huggingface.co/oldman-dev/tis-stage3-ert)** — ERT learned baseline (100% NIAH, 52.8% LITM)
-- **[tis-v8b-hard-anchor](https://huggingface.co/oldman-dev/tis-v8b-hard-anchor)** — V8b with hard-anchor + tuning (82% NIAH @ 25%)
-- **[tis-stage1-oracle](https://huggingface.co/oldman-dev/tis-stage1-oracle)** — Oracle-labeled TIS (100% NIAH @ all budgets)
+- **[tis-stage3-ert](https://huggingface.co/oldman-dev/tis-stage3-ert)**: Closed-loop retrieval checkpoint — 74%/78% hard NIAH at 50%/75% budget
+- **[tis-v8b-hard-anchor](https://huggingface.co/oldman-dev/tis-v8b-hard-anchor)**: Hard-anchor checkpoint — 82% hard NIAH at 25% budget
+- **[tis-stage1-oracle](https://huggingface.co/oldman-dev/tis-stage1-oracle)**: Oracle baseline
 
 **Download:**
 ```bash
-# Main checkpoint (recommended)
 hf download oldman-dev/tis-stage3-ert --local-dir checkpoints/stage3_ert_learned
 ```
 

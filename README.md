@@ -34,22 +34,22 @@ python -c "from token_importance.model.importance_head import ImportanceUpdateHe
 Download pre-trained TIS models from HuggingFace:
 
 ```bash
-# Main checkpoint (recommended) - 100% NIAH, 52.8% LITM
+# Main NIAH checkpoint (74% at 50% budget, 78% at 75% budget on hard eval)
 hf download oldman-dev/tis-stage3-ert \
   --local-dir checkpoints/stage3_ert_learned
 
-# Hard-anchor checkpoint - 82% NIAH @ 25%
+# Hard-anchor checkpoint (82% at 25% budget)
 hf download oldman-dev/tis-v8b-hard-anchor \
   --local-dir checkpoints/v8b_hard_anchor
 
-# Oracle baseline - theoretical ceiling
+# Oracle baseline
 hf download oldman-dev/tis-stage1-oracle \
   --local-dir checkpoints/stage1_oracle
 ```
 
 **Available Models:**
-- **[tis-stage3-ert](https://huggingface.co/oldman-dev/tis-stage3-ert)**: Main ERT checkpoint (257 MB)
-- **[tis-v8b-hard-anchor](https://huggingface.co/oldman-dev/tis-v8b-hard-anchor)**: Publication checkpoint (257 MB)  
+- **[tis-stage3-ert](https://huggingface.co/oldman-dev/tis-stage3-ert)**: Closed-loop retrieval checkpoint, 74%/78% NIAH hard at 50%/75% (257 MB)
+- **[tis-v8b-hard-anchor](https://huggingface.co/oldman-dev/tis-v8b-hard-anchor)**: Hard-anchor, 82% NIAH hard at 25% (257 MB)
 - **[tis-stage1-oracle](https://huggingface.co/oldman-dev/tis-stage1-oracle)**: Oracle baseline (259 MB)
 
 ## Documentation
@@ -127,13 +127,23 @@ python scripts/train_ert.py --help
 ## Evaluation
 
 ```bash
-# Evaluate on NIAH benchmark
+# Evaluate on NIAH Hard benchmark (recommended)
+python scripts/eval_niah_hard.py \
+  --learned-checkpoint ./checkpoints/stage3_ert_learned \
+  --budgets 0.25 0.5 0.75 \
+  --num-tests 50 \
+  --context-tokens 2048 \
+  --device cuda \
+  --seed 42
+
+# Generic eval (LITM, NarrativeQA)
 python scripts/eval.py \
-  --model ./checkpoints/my_checkpoint \
+  --model mistralai/Mistral-7B-v0.3 \
+  --checkpoint ./checkpoints/stage3_ert_learned \
   --baseline tis \
-  --benchmark niah \
-  --cache_budgets 0.25 0.5 0.75 1.0 \
-  --output ./results/niah_results.csv
+  --benchmark litm \
+  --cache_budgets 0.5 \
+  --output ./results/litm_results.csv
 ```
 
 ## Hardware Requirements

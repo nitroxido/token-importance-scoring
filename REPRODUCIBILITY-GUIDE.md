@@ -111,11 +111,11 @@ data/
 # Activate virtual environment
 source .venv/bin/activate
 
-# Download main ERT checkpoint (recommended)
+# Download main NIAH checkpoint (74%/78% hard NIAH at 50%/75%)
 hf download oldman-dev/tis-stage3-ert \
   --local-dir checkpoints/stage3_ert_learned
 
-# Optional: Download additional checkpoints
+# Optional: additional checkpoints
 hf download oldman-dev/tis-v8b-hard-anchor \
   --local-dir checkpoints/v8b_hard_anchor
 
@@ -124,8 +124,8 @@ hf download oldman-dev/tis-stage1-oracle \
 ```
 
 **Available Models:**
-- [tis-stage3-ert](https://huggingface.co/oldman-dev/tis-stage3-ert): Main checkpoint (100% NIAH, 52.8% LITM)
-- [tis-v8b-hard-anchor](https://huggingface.co/oldman-dev/tis-v8b-hard-anchor): Hard-anchor checkpoint (82% NIAH @ 25%)
+- [tis-stage3-ert](https://huggingface.co/oldman-dev/tis-stage3-ert): Main checkpoint (74%/78% hard NIAH at 50%/75%)
+- [tis-v8b-hard-anchor](https://huggingface.co/oldman-dev/tis-v8b-hard-anchor): Hard-anchor (82% at 25%)
 - [tis-stage1-oracle](https://huggingface.co/oldman-dev/tis-stage1-oracle): Oracle baseline
 
 ### 3.1 Quick Validation (20 minutes)
@@ -141,28 +141,31 @@ model = AutoModelForCausalLM.from_pretrained('mistralai/Mistral-7B-v0.3',
 tokenizer = AutoTokenizer.from_pretrained('mistralai/Mistral-7B-v0.3')
 print('Base model loads successfully')
 
-# Load checkpoint (after downloading from HuggingFace)
 import torch
-ckpt = torch.load('checkpoints/stage3_ert_learned/tis_components.pt')
-print(f'Checkpoint loaded: {len(ckpt)} parameters')
+ckpt = torch.load('checkpoints/stage3_ert_learned/tis_components.pt', map_location='cpu')
+print(f'Checkpoint keys: {list(ckpt.keys())}')
+print(f'Head keys ({len(ckpt[\"importance_head\"])}):', list(ckpt['importance_head'].keys()))
 "
 ```
 
 ### 3.2 Full Benchmark Evaluation (2 hours)
 
-**Goal**: Reproduce all published results.
+**Goal**: Reproduce NIAH hard benchmark results.
 
 ```bash
-# Evaluate Stage 3 (ERT Learned) on NIAH
-python scripts/eval_niah.py \
-  --checkpoint-path checkpoints/stage3_ert_learned \
-  --output-dir results/stage3_niah \
-  --n-samples 450 \
-  --batch-size 1
+# Evaluate main checkpoint on hard NIAH
+python scripts/eval_niah_hard.py \
+  --learned-checkpoint checkpoints/stage3_ert_learned \
+  --budgets 0.25 0.5 0.75 \
+  --num-tests 50 \
+  --context-tokens 2048 \
+  --device cuda \
+  --seed 42
 
-# Expected Output:
-# NIAH @ 25%: 100%
-# NIAH @ 50%: 100%
+# Expected output:
+# learned @ 25%: ~22%
+# learned @ 50%: ~74%
+# learned @ 75%: ~78%
 # NIAH @ 75%: 100%
 # NIAH @ 100%: 100%
 
