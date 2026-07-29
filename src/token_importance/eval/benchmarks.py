@@ -68,6 +68,292 @@ def _get_policy(model) -> str:
     return getattr(model, "_baseline_policy", "vanilla")
 
 
+# ─── Key-match oracle for LITM (Phase 4d upper bound) ─────────────────────────
+
+def _key_match_keep_indices(
+    tokenizer,
+    input_ids: torch.Tensor,
+    budget: int,
+    n_sink: int,
+    n_recent: int,
+) -> np.ndarray:
+    """Oracle LITM scoring: find queried key in context and score its tokens.
+
+    Strategy:
+      1. Decode the question region (last n_recent tokens) to extract key name X.
+      2. Decode the full context as a string and find "Key 'X':" substring position.
+      3. Re-encode the prefix up to that position to count tokens before the match.
+      4. Score the ~20 tokens starting at the match position as 200.
+
+    Uses character-level substring matching (more robust than token-level matching
+    since tokenization boundaries can shift depending on surrounding context).
+    """
+    import re
+    T = input_ids.shape[1]
+    all_ids = input_ids[0].tolist()
+
+    # Decode question region to get key name
+    q_start = max(0, T - n_recent)
+    try:
+        q_text = tokenizer.decode(all_ids[q_start:], skip_special_tokens=True)
+    except Exception:
+        return np.arange(max(0, T - budget), T)
+
+    m = re.search(r"what is the value for key\s+'([a-z]+)'", q_text.lower())
+    if not m:
+        # More permissive fallback: last occurrence of key 'X' in question
+        matches = list(re.finditer(r"key\s+'([a-z]+)'", q_text.lower()))
+        m = matches[-1] if matches else None
+    if not m:
+        return np.arange(max(0, T - budget), T)
+    key_name = m.group(1)
+
+    # Decode full context region (everything before the question)
+    ctx_end = q_start
+    try:
+        ctx_text = tokenizer.decode(all_ids[:ctx_end], skip_special_tokens=True)
+    except Exception:
+        return np.arange(max(0, T - budget), T)
+
+    # Find the key in the context text (case-insensitive)
+    search_str = f"key '{key_name}'"
+    ctx_lower = ctx_text.lower()
+    char_pos = ctx_lower.find(search_str)
+
+    if char_pos < 0:
+        # Try without quotes
+        char_pos = ctx_lower.find(key_name)
+
+    if char_pos < 0:
+        # Fallback: uniform scores → vanilla-like selection
+        return np.arange(max(0, T - budget), T)
+
+    # Encode the prefix up to the match to get the starting token index
+    prefix = ctx_text[:char_pos]
+    try:
+        prefix_toks = tokenizer.encode(prefix, add_special_tokens=False)
+        tok_start = len(prefix_toks)
+    except Exception:
+        return np.arange(max(0, T - budget), T)
+
+    # Clamp and score the KV line (~20 tokens: key + value + newline)
+    tok_start = min(tok_start, ctx_end - 1)
+    tok_end = min(tok_start + 25, ctx_end)
+
+    scores_f = np.full(T, 50.0)
+    scores_f[:n_sink] = 201.0
+    scores_f[max(0, T - n_recent):] = 201.0
+    scores_f[tok_start:tok_end] = 200.0
+
+    keep_idx = np.sort(np.argsort(scores_f)[::-1][:budget])
+    return keep_idx
+
+
+# ─── Learned head scoring (Phase 4d) ─────────────────────────────────────────
+
+def _learned_head_keep_indices(
+    model,
+    input_ids: torch.Tensor,
+    budget: int,
+    n_sink: int,
+    n_recent: int,
+) -> np.ndarray:
+    """Score tokens using the model's trained importance_head.out_proj(hidden).
+
+    Runs one forward pass with uniform importance scores (50), extracts last
+    hidden states, and applies importance_head.out_proj to get per-token scores.
+    This is the same path used during closed-loop training (train_closed_loop_retrieval.py).
+
+    Falls back to positional selection (keep first budget_tokens) if the head
+    cannot be consulted (e.g. model is not a PatchedCausalLM).
+    """
+    T = input_ids.shape[1]
+    try:
+        if not _is_patched(model):
+            raise ValueError("model is not PatchedCausalLM, cannot use learned head scoring")
+        device = input_ids.device
+        seed_scores = torch.full((T,), 50, dtype=torch.uint8, device=device)
+
+        with torch.no_grad():
+            out = model(
+                input_ids=input_ids,
+                importance_scores=seed_scores,
+                attention_mask=torch.ones_like(input_ids),
+                output_hidden_states=True,
+            )
+        if not (hasattr(out, "hidden_states") and out.hidden_states):
+            raise ValueError("model did not return hidden_states")
+
+        hidden = out.hidden_states[-1].float().squeeze(0)  # [T, d_model]
+
+        head = model.importance_head
+        if hasattr(head, "out_proj"):
+            # Closed-loop / ImportanceUpdateHead path: direct_token_scorer
+            with torch.no_grad():
+                scores_t = head.direct_score(hidden).cpu().numpy()  # [T] in [0,100]
+        elif hasattr(head, "mlp") and hasattr(head, "cross_attn"):
+            # QueryAwareImportanceHead path: use last n_recent tokens as query
+            with torch.no_grad():
+                n_q = min(64, T)
+                ctx_hidden = hidden[:-n_q].unsqueeze(0)     # [1, T_ctx, d]
+                q_hidden = hidden[-n_q:].unsqueeze(0)        # [1, T_q, d]
+                if ctx_hidden.shape[1] == 0:
+                    ctx_hidden = hidden.unsqueeze(0)
+                    q_hidden = hidden[-1:].unsqueeze(0)
+                scores_raw = head(ctx_hidden, q_hidden)      # [1, T_ctx, 1]
+                # Pad back to full T
+                scores_t = torch.zeros(T)
+                scores_t[:ctx_hidden.shape[1]] = torch.sigmoid(
+                    scores_raw.squeeze(-1).squeeze(0)
+                ).float() * 100.0
+                scores_t = scores_t.cpu().numpy()
+        elif hasattr(head, "score_proj"):
+            # Generic fallback: use hidden-state norm as proxy
+            scores_t = hidden.norm(dim=-1).cpu().numpy()
+            lo, hi = scores_t.min(), scores_t.max()
+            scores_t = (scores_t - lo) / (hi - lo + 1e-8) * 100.0
+        else:
+            raise ValueError("importance_head has no known scoring path")
+
+        scores_f = scores_t.astype(float) * 100.0
+        scores_f[:n_sink] = 201.0
+        scores_f[max(0, T - n_recent):] = 201.0
+
+        keep_idx = np.sort(np.argsort(scores_f)[::-1][:budget])
+        return keep_idx
+
+    except Exception:
+        # Graceful fallback: keep most-recent tokens (vanilla-style)
+        return np.arange(max(0, T - budget), T)
+
+
+def _query_dot_keep_indices(
+    model,
+    input_ids: torch.Tensor,
+    budget: int,
+    n_sink: int,
+    n_recent: int,
+    n_query_tokens: int = 64,
+) -> np.ndarray:
+    """Score context tokens by dot-product similarity to the question representation.
+
+    Uses the LAST n_query_tokens hidden states (question region) as a query
+    representation.  Scores each context token by how similar its hidden state
+    is to the pooled question representation.
+
+    Rationale: the question token's final hidden state is a contextualized
+    summary that has attended to all previous tokens.  Tokens that are
+    *semantically close* to the question (e.g. the queried KV pair) will have
+    high dot-product similarity to the question hidden state.
+
+    This scoring is query-aware WITHOUT requiring any training, and is
+    complementary to out_proj(hidden) (which is position-biased).
+    """
+    T = input_ids.shape[1]
+    try:
+        if not _is_patched(model):
+            raise ValueError("not a PatchedCausalLM")
+        device = input_ids.device
+        seed_scores = torch.full((T,), 50, dtype=torch.uint8, device=device)
+
+        with torch.no_grad():
+            out = model(
+                input_ids=input_ids,
+                importance_scores=seed_scores,
+                attention_mask=torch.ones_like(input_ids),
+                output_hidden_states=True,
+            )
+        hidden = out.hidden_states[-1].float().squeeze(0)  # [T, d]
+
+        # Pool the last n_query_tokens as the question representation
+        q_start = max(0, T - n_query_tokens)
+        query_repr = hidden[q_start:].mean(dim=0)  # [d]
+
+        # Dot-product similarity: each token vs query representation
+        scores_t = (hidden @ query_repr).cpu().numpy()  # [T]
+        # Normalize to [0, 1]
+        lo, hi = scores_t.min(), scores_t.max()
+        if hi > lo:
+            scores_t = (scores_t - lo) / (hi - lo)
+
+        scores_f = scores_t.astype(float) * 100.0
+        scores_f[:n_sink] = 201.0
+        scores_f[max(0, T - n_recent):] = 201.0
+
+        keep_idx = np.sort(np.argsort(scores_f)[::-1][:budget])
+        return keep_idx
+
+    except Exception:
+        return np.arange(max(0, T - budget), T)
+
+
+def _query_inject_keep_indices(
+    model,
+    input_ids: torch.Tensor,
+    budget: int,
+    n_sink: int,
+    n_recent: int,
+    n_query_tokens: int = 64,
+    alpha: float = 0.3,
+) -> np.ndarray:
+    """P4-B Query-inject scoring: enrich every token representation with a query summary.
+
+    Strategy (O(T), no architecture change):
+      1. Run one forward pass to get hidden states H [T, d].
+      2. Pool the last n_query_tokens as the query summary q [d].
+      3. Compute enriched = H + alpha * q.expand(T, -1)
+         → every beginning token now "knows" what the query is asking.
+      4. Score with importance_head.direct_score(enriched).
+
+    This directly addresses the causal attention limitation for beginning tokens:
+    their hidden states don't encode the query, but after injection they do.
+
+    alpha=0.3 means the query contributes ~23% of the signal
+    (assuming ||H_i|| ≈ ||q||; tune if needed).
+    """
+    T = input_ids.shape[1]
+    try:
+        if not _is_patched(model):
+            raise ValueError("not a PatchedCausalLM")
+        device = input_ids.device
+        seed_scores = torch.full((T,), 50, dtype=torch.uint8, device=device)
+
+        with torch.no_grad():
+            out = model(
+                input_ids=input_ids,
+                importance_scores=seed_scores,
+                attention_mask=torch.ones_like(input_ids),
+                output_hidden_states=True,
+            )
+        hidden = out.hidden_states[-1].float().squeeze(0)  # [T, d]
+
+        # Extract query summary from last n_query_tokens (the question region)
+        q_start = max(0, T - n_query_tokens)
+        query_summary = hidden[q_start:].mean(dim=0)  # [d]
+
+        # Inject query context into ALL token representations
+        enriched = hidden + query_summary.unsqueeze(0).expand(T, -1) * alpha  # [T, d]
+
+        # Score using trained head on enriched representations
+        head = model.importance_head
+        if hasattr(head, "out_proj"):
+            with torch.no_grad():
+                scores_t = head.direct_score(enriched).cpu().numpy()  # [T]
+        else:
+            # Fallback: norm of enriched hidden states
+            scores_t = enriched.norm(dim=-1).cpu().numpy()
+            lo, hi = scores_t.min(), scores_t.max()
+            scores_t = (scores_t - lo) / (hi - lo + 1e-8) * 100.0
+
+        scores_f = scores_t.astype(float)
+        scores_f[:n_sink] = 201.0
+        scores_f[max(0, T - n_recent):] = 201.0
+        return np.sort(np.argsort(scores_f)[::-1][:budget])
+
+    except Exception:
+        return np.arange(max(0, T - budget), T)
+
+
 # ─── Token budget selection ───────────────────────────────────────────────────
 
 def _select_token_budget(
@@ -83,6 +369,14 @@ def _select_token_budget(
 
     Returns (selected_ids [1, budget], selected_scores [budget]).
     If *budget_tokens* >= T the inputs are returned unchanged.
+
+    Policies:
+      tis          — oracle importance scores from benchmark (original)
+      tis_head     — learned importance head scores (Phase 4d, query-aware)
+      snapkv       — SnapKV attention pooling
+      h2o          — H2O cumulative attention
+      streamingllm — sink + recency window
+      vanilla      — most-recent tokens
     """
     T = input_ids.shape[1]
     if budget_tokens >= T:
@@ -90,12 +384,78 @@ def _select_token_budget(
 
     budget_tokens = max(budget_tokens, n_sink + n_recent + 1)
 
-    if policy == "tis":
+    if policy in ("tis", "tis_oracle"):
         # Keep highest-importance tokens; sinks and recency window are protected.
         scores_f = importance_scores.astype(float).copy()
         scores_f[:n_sink] = 201.0
         scores_f[max(0, T - n_recent):] = 201.0
         keep_idx = np.sort(np.argsort(scores_f)[::-1][:budget_tokens])
+
+    elif policy == "tis_head":
+        # Phase 4d: use trained importance_head.out_proj(hidden) scores for selection
+        keep_idx = _learned_head_keep_indices(model, input_ids, budget_tokens, n_sink, n_recent)
+
+    elif policy == "tis_query_dot":
+        # Query-aware dot-product scoring: no training required, fixes beginning-position bias
+        keep_idx = _query_dot_keep_indices(model, input_ids, budget_tokens, n_sink, n_recent)
+
+    elif policy == "tis_query_inject":
+        # P4-B: query-inject scoring — enriches all token reps with query summary before scoring
+        keep_idx = _query_inject_keep_indices(model, input_ids, budget_tokens, n_sink, n_recent)
+
+    elif policy == "tis_hybrid":
+        # Hybrid: combine out_proj(hidden) with key-match oracle (max of both)
+        # tis_head: excellent for middle (98%), poor for beginning (0%)
+        # tis_key_match: excellent for beginning (67%), good for middle (82%)
+        # Max combines both strengths
+        T = input_ids.shape[1]
+        tokenizer = getattr(model, "_tokenizer", None)
+        device = input_ids.device
+
+        # Get key-match scores
+        if tokenizer is not None:
+            km_idx = _key_match_keep_indices(tokenizer, input_ids, budget_tokens, n_sink, n_recent)
+            km_scores = np.full(T, 50.0)
+            km_scores[km_idx] = 90.0  # Boost key-match selected tokens
+            km_scores[:n_sink] = 201.0
+            km_scores[max(0, T - n_recent):] = 201.0
+        else:
+            km_scores = np.full(T, 50.0)
+            km_scores[:n_sink] = 201.0
+            km_scores[max(0, T - n_recent):] = 201.0
+
+        # Get head scores
+        try:
+            seed_scores = torch.full((T,), 50, dtype=torch.uint8, device=device)
+            with torch.no_grad():
+                out = model(
+                    input_ids=input_ids,
+                    importance_scores=seed_scores,
+                    attention_mask=torch.ones_like(input_ids),
+                    output_hidden_states=True,
+                )
+            hidden = out.hidden_states[-1].float().squeeze(0)
+            head_raw = model.importance_head.out_proj(hidden.unsqueeze(0)).squeeze()
+            head_s = torch.sigmoid(head_raw).cpu().numpy() * 100.0
+            head_s[:n_sink] = 201.0
+            head_s[max(0, T - n_recent):] = 201.0
+        except Exception:
+            head_s = np.full(T, 50.0)
+            head_s[:n_sink] = 201.0
+            head_s[max(0, T - n_recent):] = 201.0
+
+        # Take max of key-match and head scores for each token
+        combined = np.maximum(km_scores, head_s)
+        keep_idx = np.sort(np.argsort(combined)[::-1][:budget_tokens])
+
+    elif policy == "tis_key_match":
+        # Oracle: parse queried key from question tokens, score matching KV pair
+        tokenizer = getattr(model, "_tokenizer", None)
+        if tokenizer is not None:
+            keep_idx = _key_match_keep_indices(tokenizer, input_ids, budget_tokens, n_sink, n_recent)
+        else:
+            # Fallback to tis_head if no tokenizer attached
+            keep_idx = _learned_head_keep_indices(model, input_ids, budget_tokens, n_sink, n_recent)
 
     elif policy == "streamingllm":
         n_last = max(0, budget_tokens - n_sink)

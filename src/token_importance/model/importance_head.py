@@ -105,6 +105,37 @@ class ImportanceUpdateHead(nn.Module):
         positions = torch.arange(min(T, len(store)), dtype=torch.long)
         store.update(positions, int_deltas[: len(positions)])
 
+    def direct_score(self, hidden: torch.Tensor) -> torch.Tensor:
+        """Per-token direct scorer — the evaluation and closed-loop training path.
+
+        Applies out_proj independently to each token's hidden state, yielding a
+        distinct importance score for every token.  This is the path used by:
+          - scripts/eval_niah_hard.py  (``_learned_scores``)
+          - scripts/train_closed_loop_retrieval.py  (``_predict_scores``)
+          - src/token_importance/eval/benchmarks.py  (``_learned_head_keep_indices``)
+
+        Scorer path name: ``direct_token_scorer``
+
+        NOTE: This differs from ImportanceUpdateHead.forward() which is the
+        *runtime cross-attention update scorer*:
+          - forward() cross-attends the last-step query to all context tokens,
+            then broadcasts a single vector uniformly → same delta for every token.
+          - direct_score() projects each token's hidden state independently →
+            a different score per token.  This is the learned discriminative path.
+
+        Args:
+            hidden: ``[B, T, d_model]`` or ``[T, d_model]`` last hidden states.
+
+        Returns:
+            ``[B, T]`` or ``[T]`` importance scores in ``[0, 100]``.
+        """
+        squeeze = hidden.dim() == 2
+        if squeeze:
+            hidden = hidden.unsqueeze(0)
+        raw = self.out_proj(hidden)                           # [B, T, 1]
+        scores = torch.sigmoid(raw.squeeze(-1)) * 100.0      # [B, T]
+        return scores.squeeze(0) if squeeze else scores
+
 
 class QueryAwareImportanceHead(nn.Module):
     """Query-aware importance head using cross-attention to query embeddings.

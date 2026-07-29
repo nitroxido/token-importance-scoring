@@ -64,13 +64,15 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                    help="Non-uniform budget sampling weights. E.g. 4 1 1 trains 4x more at the first budget.")
     p.add_argument("--log-interval", type=int, default=50)
     p.add_argument("--device", default="")
+    p.add_argument("--base-model", default="mistralai/Mistral-7B-v0.3",
+                   help="HuggingFace model ID for the target LLM")
     return p.parse_args(argv)
 
 
 # ── Model loading ──────────────────────────────────────────────────────────────
 
-def _load_model(checkpoint: Path, device: torch.device) -> PatchedCausalLM:
-    model_name = "mistralai/Mistral-7B-v0.3"
+def _load_model(checkpoint: Path, device: torch.device, base_model: str = "mistralai/Mistral-7B-v0.3") -> PatchedCausalLM:
+    model_name = base_model
     quant_cfg = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_compute_dtype=torch.bfloat16,
@@ -219,7 +221,7 @@ def main():
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    model = _load_model(Path(args.base_checkpoint), device)
+    model = _load_model(Path(args.base_checkpoint), device, base_model=args.base_model)
 
     # Freeze base model; only train TIS components
     for param in model._base_model.parameters():
@@ -240,7 +242,7 @@ def main():
     optimizer = torch.optim.AdamW(trainable, lr=args.lr, weight_decay=0.01)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.steps)
 
-    tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.3")
+    tokenizer = AutoTokenizer.from_pretrained(args.base_model)
     tokenizer.pad_token_id = tokenizer.eos_token_id
 
     dataset = RetrievalDataset(
@@ -350,7 +352,7 @@ def main():
     torch.save(tis_state, output_dir / "tis_components.pt")
 
     metadata = {
-        "model": "mistralai/Mistral-7B-v0.3",
+        "model": args.base_model,
         "training_type": "closed_loop_retrieval",
         "steps": args.steps,
         "lr": args.lr,

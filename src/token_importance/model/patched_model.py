@@ -1,6 +1,7 @@
-"""PatchedCausalLM â€” wraps any HuggingFace CausalLM with TIS components."""
+"""PatchedCausalLM — wraps any HuggingFace CausalLM with TIS components."""
 from __future__ import annotations
 
+import warnings
 import torch
 import torch.nn as nn
 from transformers import AutoModelForCausalLM, PreTrainedModel
@@ -12,6 +13,39 @@ from token_importance.cache.importance_store import ImportanceStore
 from token_importance.model.importance_embedding import ImportanceEmbedding
 from token_importance.model.importance_attn import ImportanceAttnBiasHook
 from token_importance.model.importance_head import ImportanceUpdateHead
+
+
+def _check_transformers_compat() -> None:
+    """Warn early when running under Transformers >= 5.
+
+    The SDPA attention path in Transformers 5 changed its internal tensor
+    layout (repeat_kv now expects a different shape).  PatchedCausalLM's
+    merged attention-mask injection is incompatible with the new layout.
+
+    Affected: model.forward() and model.generate() (the full inference path).
+    Unaffected: importance_head.direct_score(hidden) — the direct scorer works
+    correctly because it bypasses the patched attention path entirely.
+
+    Workaround for Transformers 5:
+        base = AutoModelForCausalLM.from_pretrained(name, ...)
+        hidden = base(input_ids, output_hidden_states=True).hidden_states[-1]
+        scores = model.importance_head.direct_score(hidden)
+    """
+    try:
+        import transformers as _tf
+        major = int(_tf.__version__.split(".")[0])
+        if major >= 5:
+            warnings.warn(
+                f"PatchedCausalLM: Transformers {_tf.__version__} detected. "
+                "The full inference path (importance-mask injection via forward/generate) "
+                "has known incompatibilities with the Transformers 5 SDPA attention layout. "
+                "The direct scorer path (importance_head.direct_score(hidden)) works correctly. "
+                "See SOURCE-CODE-CHANGES-REQUIRED.md for the workaround.",
+                UserWarning,
+                stacklevel=3,
+            )
+    except Exception:
+        pass
 
 
 class PatchedCausalLM(nn.Module):
@@ -29,6 +63,7 @@ class PatchedCausalLM(nn.Module):
 
     def __init__(self, base_model: Any, config: TISConfig | None = None) -> None:
         super().__init__()
+        _check_transformers_compat()
         self.base = base_model
         self._base_model: Any = cast(Any, base_model)
         self.tis_config = config or TISConfig()
@@ -160,6 +195,10 @@ class PatchedCausalLM(nn.Module):
             max_new_tokens=max_new_tokens,
             **kwargs,
         )
+        # Transformers 5 includes the input prefix in the returned tensor;
+        # strip it if present so we never double-prepend.
+        if new_ids.shape[1] > max_new_tokens:
+            new_ids = new_ids[:, input_ids.shape[1]:]
         output_ids = torch.cat([input_ids, new_ids], dim=1)
 
         try:
