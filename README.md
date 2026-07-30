@@ -30,29 +30,54 @@ TIS improves drafter accuracy (+12.5% acceptance length). Real attention drift i
 
 TIS can score entire passage relevance (not just individual tokens), enabling query-aware reordering of retrieved passages before generation. This completely eliminates the Lost-in-the-Middle position bias documented in Liu et al. (2023).
 
-**Passage reordering results** (MS-MARCO, 60 queries × 3 positions = 180 test cases):
+**Passage reordering results** (MS-MARCO, 60 queries × 3 positions = 180 test cases, seed=42):
 
-| Pipeline | EM (early) | EM (middle) | EM (end) | LITM gap | vs Baseline |
+| Pipeline | EM (early) | EM (middle) | EM (end) | LITM gap | Recall@1 |
 |---|---|---|---|---|---|
-| Baseline | 18.3% | 13.3% | 18.3% | 0.050 | — |
-| Lexical (TF-IDF) | 16.7% | 18.3% | 18.3% | −0.008 | −116% |
-| **TIS (passage head)** | **21.7%** | **21.7%** | **21.7%** | **0.000** | **−100%** |
-| Oracle | 18.3% | 18.3% | 18.3% | 0.000 | — |
+| Baseline | 18.3% | 13.3% | 18.3% | 0.050 | 33.3% avg |
+| Lexical (TF-IDF) | 16.7% | 18.3% | 18.3% | −0.008 | 35.0% |
+| **TIS (passage head)** | **21.7%** | **21.7%** | **21.7%** | **0.000** | 21.7% |
+| Oracle (gold-first) | 18.3% | 18.3% | 18.3% | 0.000 | 100% |
 
-TIS achieves position-invariant performance (gap=0) while improving overall EM by +5pp over baseline.
+Full per-pipeline results: [`results/litm_with_baselines_summary.csv`](results/litm_with_baselines_summary.csv)  
+Per-example predictions: [`results/litm_per_example_breakdown.csv`](results/litm_per_example_breakdown.csv)
+
+**Methodological notes:**
+
+- **Ranking quality ≠ answer quality**: TIS achieves lower Recall@1 (21.7%) than lexical TF-IDF (35.0%), but higher EM (21.7% vs 17.8%). TIS optimizes for answer extraction, not gold-passage-first ordering.
+- **Oracle paradox**: TIS EM (21.7%) exceeds oracle EM (18.3%), indicating that TIS's full-context reordering improves context coherence beyond simply placing the gold passage first.
+- **Answer extraction is the bottleneck**: 76.1% of cases remain wrong under both baseline and TIS. 7.2% transition wrong→right (TIS recoveries) vs 2.2% right→wrong (TIS degradations). Net recovery ratio: 3.25:1.
+- **EM definition**: Extended EM (lenient substring match). Exact definition in [`results/litm_with_baselines_metadata.json`](results/litm_with_baselines_metadata.json).
+
+**Methodological validation — paired position sweep:**
+
+A paired evaluation (same passage sets at all 3 positions, removes difficulty variance) produces identical results, confirming the LITM gap is genuine position-dependent attention, not a difficulty confound:
+
+| Condition | Baseline gap | TIS gap |
+|---|---|---|
+| Independent generation | 0.050 | 0.000 |
+| **Paired sweep** | **0.050** | **0.000** |
+
+Paired results: [`results/litm_paired_summary.csv`](results/litm_paired_summary.csv)
 
 **Transfer finding**: The existing `tis-stage3-ert` checkpoint (trained for KV cache compression) achieves identical passage reordering performance without retraining. TIS learns generalizable importance patterns applicable across tasks.
 
 ```bash
-# Evaluate passage reordering with 4 pipelines
+# Reproduce published LITM results — 4-pipeline comparison (n=60, seed=42)
 python scripts/run_litm_with_baselines.py \
-    --checkpoint checkpoints/stage3_ert_learned \
+    --checkpoint checkpoints/v8b_hard_anchor \
     --n-examples 60 \
     --seed 42
 
-# Transfer test: KV-eviction head → passage reordering
+# Paired position sweep — validates LITM gap is not a difficulty confound
+python scripts/run_litm_paired_sweep.py \
+    --checkpoint checkpoints/v8b_hard_anchor \
+    --n-examples 60 \
+    --seed 42
+
+# Transfer test: KV-eviction head → passage reordering (zero-shot)
 python scripts/test_kv_eviction_head_on_litm.py \
-    --checkpoint checkpoints/stage3_ert_learned \
+    --checkpoint checkpoints/stage3_ert \
     --n-examples 60 --seed 42
 ```
 
@@ -243,10 +268,16 @@ Key-value retrieval across long contexts (Liu et al., 2023 protocol).
 
 ## Reproducibility
 
-The `results/` directory contains pre-computed evaluation artifacts for all
-published checkpoints, including per-example predictions and ranking metrics.
-`results/eval_manifest.json` records SHA256 hashes, source commit, environment
-versions, and exact evaluation commands for full traceability.
+The `results/` directory contains all pre-computed evaluation artifacts:
+
+| File | Contents |
+|---|---|
+| [`eval_manifest.json`](results/eval_manifest.json) | SHA256 hashes, source commit, environment versions, NIAH + LITM numbers for all 3 checkpoints |
+| [`litm_with_baselines_summary.csv`](results/litm_with_baselines_summary.csv) | 4-pipeline LITM results — Recall@1, MRR, EM, F1 (n=60, seed=42) |
+| [`litm_per_example_breakdown.csv`](results/litm_per_example_breakdown.csv) | 271-row per-example breakdown — predictions, transitions, gold answers |
+| [`litm_paired_summary.csv`](results/litm_paired_summary.csv) | Paired position sweep (controls difficulty variance) |
+| [`litm_paired_metadata.json`](results/litm_paired_metadata.json) | Paired sweep settings and provenance |
+| [`litm_with_baselines_metadata.json`](results/litm_with_baselines_metadata.json) | Exact eval settings: model, scorer, dataset, generation config, command |
 
 Generate a manifest for any new checkpoint:
 
