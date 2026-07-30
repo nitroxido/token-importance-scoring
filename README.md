@@ -91,11 +91,24 @@ pip install -e .
 python -c "from token_importance.model.importance_head import ImportanceUpdateHead; print('OK')"
 ```
 
+## Repo Structure vs Docs
+
+All commands in this README are backed by scripts under `scripts/` and modules under `src/token_importance/`. See [SOURCE-CODE-README.md](SOURCE-CODE-README.md) for a full map of scripts → modules → evaluation pipelines.
+
+| Location | Contents |
+|---|---|
+| `src/token_importance/` | All importable modules (model, training, eval, utils) |
+| `scripts/` | Runnable evaluation and training scripts |
+| `results/` | Pre-computed artifacts (CSVs, metadata JSONs, eval manifest) |
+| `tests/` | API compatibility suite (`pytest tests/test_compatibility.py -v`, no GPU) |
+| `checkpoints/` | **Not included** — download from HuggingFace (see below) |
+| `data/` | **Not included** — auto-generated or downloaded per script |
+
 ## Pre-trained Checkpoints
 
 ```bash
 # Main NIAH + passage reordering checkpoint
-hf download oldman-dev/tis-stage3-ert --local-dir checkpoints/stage3_ert_learned
+hf download oldman-dev/tis-stage3-ert --local-dir checkpoints/stage3_ert
 
 # V8b hard-anchor (best evidence survival @ 25%)
 hf download oldman-dev/tis-v8b-hard-anchor --local-dir checkpoints/v8b_hard_anchor
@@ -118,9 +131,11 @@ hf download oldman-dev/tis-stage1-oracle --local-dir checkpoints/stage1_oracle
 
 ### NIAH Hard Benchmark
 
+> Requires checkpoint downloaded per [CHECKPOINT_AND_DATA_DOWNLOADS.md](CHECKPOINT_AND_DATA_DOWNLOADS.md)
+
 ```bash
 python scripts/eval_niah_hard.py \
-    --learned-checkpoint checkpoints/closed_loop_v6 \
+    --learned-checkpoint checkpoints/closed_loop_retrieval_v6 \
     --budgets 0.25 0.5 0.75 \
     --num-tests 50 \
     --context-tokens 2048 \
@@ -132,6 +147,8 @@ python scripts/eval_niah_hard.py \
 
 ### LITM Benchmark
 
+> Requires checkpoint downloaded per [CHECKPOINT_AND_DATA_DOWNLOADS.md](CHECKPOINT_AND_DATA_DOWNLOADS.md)
+
 Three scoring policies are available:
 
 ```bash
@@ -141,7 +158,7 @@ python scripts/eval.py \
     --load_in_4bit \
     --baseline tis \
     --benchmark litm \
-    --checkpoint checkpoints/closed_loop_v6 \
+    --checkpoint checkpoints/closed_loop_retrieval_v6 \
     --cache_budgets 0.5 0.75 \
     --n_samples 20 \
     --output results/litm_tis.csv
@@ -161,7 +178,9 @@ python scripts/eval.py ... --baseline tis_key_match ...
 
 ### Speculative Decoding (Phase 5)
 
-Demonstrates TIS importance bias applied to a real speculative drafter (LLaMA-3.2-3B with LLaMA-3.1-8B as target):
+> Requires LLaMA models downloaded (see commands below). Not dependent on TIS checkpoints above.
+
+Demonstrates TIS importance bias applied to a real speculative drafter (LLaMA-3.2-1B with LLaMA-3.1-8B as target):
 
 ```bash
 # Download models (both ungated, same 128K vocabulary)

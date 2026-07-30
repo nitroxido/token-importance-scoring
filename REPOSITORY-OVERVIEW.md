@@ -187,7 +187,7 @@ Pre-trained checkpoints available on HuggingFace:
 
 **Download:**
 ```bash
-hf download oldman-dev/tis-stage3-ert --local-dir checkpoints/stage3_ert_learned
+hf download oldman-dev/tis-stage3-ert --local-dir checkpoints/stage3_ert
 ```
 
 ### Analysis and Results
@@ -218,19 +218,19 @@ pip install -e .
 ### Download Pre-trained Checkpoints
 ```bash
 # Download main ERT checkpoint
-hf download oldman-dev/tis-stage3-ert --local-dir checkpoints/stage3_ert_learned
+hf download oldman-dev/tis-stage3-ert --local-dir checkpoints/stage3_ert
 ```
 
 ### NIAH Benchmark Evaluation
 ```bash
-python scripts/eval_niah.py --checkpoint checkpoints/stage3_ert_learned \
+python scripts/eval_niah.py --checkpoint checkpoints/stage3_ert \
   --budget 0.5 --n_samples 100
 # Expected: 100% accuracy
 ```
 
 ### LITM Benchmark Evaluation
 ```bash
-python scripts/eval_litm.py --checkpoint checkpoints/stage3_ert_learned \
+python scripts/eval_litm.py --checkpoint checkpoints/stage3_ert \
   --budget 0.5
 # Expected: ~52.8% accuracy
 ```

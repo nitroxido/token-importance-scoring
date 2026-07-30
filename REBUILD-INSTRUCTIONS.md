@@ -151,7 +151,7 @@ source .venv/bin/activate
 
 # Download main ERT checkpoint
 hf download oldman-dev/tis-stage3-ert \
-  --local-dir ./checkpoints/stage3_ert_learned
+  --local-dir ./checkpoints/stage3_ert
 
 # Or download hard-anchor checkpoint
 hf download oldman-dev/tis-v8b-hard-anchor \

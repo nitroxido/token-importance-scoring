@@ -171,19 +171,22 @@ class GumbelTopkLayer(torch.nn.Module):
     
     def __init__(
         self,
+        top_k: int = None,
         temperature_init: float = 1.0,
         temperature_min: float = 0.1,
         annealing_steps: int = 10000,
     ):
         """
         Initialize Gumbel-TopK layer.
-        
+
         Args:
+            top_k: Default k to use in forward() when k is not provided explicitly
             temperature_init: Initial temperature
             temperature_min: Minimum temperature (after annealing)
             annealing_steps: Steps to anneal temperature over
         """
         super().__init__()
+        self.top_k = top_k
         self.temperature_init = temperature_init
         self.temperature_min = temperature_min
         self.annealing_steps = annealing_steps
@@ -198,20 +201,24 @@ class GumbelTopkLayer(torch.nn.Module):
     def forward(
         self,
         scores: torch.Tensor,
-        k: int,
+        k: int = None,
         hard: bool = True,
     ) -> torch.Tensor:
         """
         Select top-k by importance using Gumbel-Softmax.
-        
+
         Args:
             scores: [batch, n] importance scores
-            k: Number to keep
+            k: Number to keep (defaults to self.top_k if set)
             hard: Use straight-through estimator
-            
+
         Returns:
             masks: [batch, n] selection masks
         """
+        if k is None:
+            k = self.top_k
+        if k is None:
+            raise ValueError("k must be provided either at init (top_k=) or in forward()")
         temp = self.get_temperature()
         return gumbel_topk(scores, k, temperature=temp, hard=hard)
     

@@ -113,7 +113,7 @@ source .venv/bin/activate
 
 # Download main NIAH checkpoint (74%/78% hard NIAH at 50%/75%)
 hf download oldman-dev/tis-stage3-ert \
-  --local-dir checkpoints/stage3_ert_learned
+  --local-dir checkpoints/stage3_ert
 
 # Optional: additional checkpoints
 hf download oldman-dev/tis-v8b-hard-anchor \
@@ -142,7 +142,7 @@ tokenizer = AutoTokenizer.from_pretrained('mistralai/Mistral-7B-v0.3')
 print('Base model loads successfully')
 
 import torch
-ckpt = torch.load('checkpoints/stage3_ert_learned/tis_components.pt', map_location='cpu')
+ckpt = torch.load('checkpoints/stage3_ert/tis_components.pt', map_location='cpu')
 print(f'Checkpoint keys: {list(ckpt.keys())}')
 print(f'Head keys ({len(ckpt[\"importance_head\"])}):', list(ckpt['importance_head'].keys()))
 "
@@ -155,7 +155,7 @@ print(f'Head keys ({len(ckpt[\"importance_head\"])}):', list(ckpt['importance_he
 ```bash
 # Evaluate main checkpoint on hard NIAH
 python scripts/eval_niah_hard.py \
-  --learned-checkpoint checkpoints/stage3_ert_learned \
+  --learned-checkpoint checkpoints/stage3_ert \
   --budgets 0.25 0.5 0.75 \
   --num-tests 50 \
   --context-tokens 2048 \
@@ -171,7 +171,7 @@ python scripts/eval_niah_hard.py \
 
 # Evaluate Stage 3 on LITM
 python scripts/eval_litm.py \
-  --checkpoint-path checkpoints/stage3_ert_learned \
+  --checkpoint-path checkpoints/stage3_ert \
   --output-dir results/stage3_litm \
   --batch-size 1
 
@@ -314,7 +314,7 @@ python scripts/train_stage3_ert.py \
 
 # Or use CPU inference (slow but works)
 python scripts/eval_niah.py \
-  --checkpoint-path checkpoints/stage3_ert_learned \
+  --checkpoint-path checkpoints/stage3_ert \
   --device cpu \
   --batch-size 1
 ```
@@ -330,7 +330,7 @@ huggingface-cli download mistralai/Mistral-7B-v0.3 --local-dir models/mistral-7b
 
 # Or set explicit path
 export TRANSFORMERS_CACHE=/path/to/models
-python scripts/eval_niah.py --checkpoint-path checkpoints/stage3_ert_learned
+python scripts/eval_niah.py --checkpoint-path checkpoints/stage3_ert
 ```
 
 ### 5.3 Data Loading Issues
@@ -343,7 +343,7 @@ python scripts/eval_niah.py --checkpoint-path checkpoints/stage3_ert_learned
 python scripts/prepare_niah.py --output-dir data/niah --overwrite
 
 # Or download pre-generated
-wget https://huggingface.co/datasets/your-org/tis-niah/data/niah_budget_0.50.jsonl -O data/niah/budget_0.50.jsonl
+wget https://huggingface.co/datasets/oldman-dev/tis-niah/data/niah_budget_0.50.jsonl -O data/niah/budget_0.50.jsonl
 ```
 
 ### 5.4 Checkpoint Incompatibility
@@ -353,7 +353,7 @@ wget https://huggingface.co/datasets/your-org/tis-niah/data/niah_budget_0.50.jso
 **Solution**:
 ```bash
 # Verify checkpoint version
-python -c "import torch; ckpt = torch.load('checkpoints/stage3_ert_learned/pytorch_model.bin'); print(ckpt.keys())"
+python -c "import torch; ckpt = torch.load('checkpoints/stage3_ert/pytorch_model.bin'); print(ckpt.keys())"
 
 # Ensure PyTorch/transformers versions match
 pip install torch==2.1.2 transformers==4.36.0
@@ -371,7 +371,7 @@ To evaluate on your own data:
 # scripts/eval_custom.py
 from src.tis_model import TISModel
 
-model = TISModel.from_checkpoint('checkpoints/stage3_ert_learned')
+model = TISModel.from_checkpoint('checkpoints/stage3_ert')
 
 # Your data
 context = "Your long document here..."
@@ -487,7 +487,7 @@ Before considering reproduction complete, verify:
 **Quick Start** (if using published checkpoints):
 ```bash
 source tis_env/bin/activate
-python scripts/eval_niah.py --checkpoint-path checkpoints/stage3_ert_learned
+python scripts/eval_niah.py --checkpoint-path checkpoints/stage3_ert
 # Result: 100% NIAH @ all budgets in ~20 minutes
 ```
 

@@ -34,12 +34,12 @@ scripts/
 ├── eval_niah_hard.py               # Hard-NIAH: heuristic vs learned vs snapkv_proxy
 ├── train_closed_loop_retrieval.py  # Phase 3: closed-loop retrieval TIS training
 ├── train_drafter_tis_aware.py      # Phase 5: TIS-aware drafter training
-├── run_speculative_decoding_tis.py # Phase 5: real speculative decoding evaluation
+├── run_self_spec_decoding_tis.py   # Phase 5: real speculative decoding evaluation
 ├── generate_eval_manifest.py       # Reproducibility manifest generator
 
 tests/
 ├── test_compatibility.py           # API compatibility suite (13 tests, no GPU)
-└── test_regression_reference.py    # Accuracy regression suite (GPU required)
+└── test_compatibility.py           # API compatibility suite (no GPU, ~6 s)
 ```
 
 ## Installation
@@ -134,7 +134,7 @@ python scripts/train_closed_loop_retrieval.py \
 ### Run Speculative Decoding Evaluation
 
 ```bash
-python scripts/run_speculative_decoding_tis.py \
+python scripts/run_self_spec_decoding_tis.py \
     --tis-checkpoint checkpoints/llama31_tis \
     --n-examples 30 --max-depth 8 \
     --lambda-d 0.2 \
@@ -180,10 +180,6 @@ python scripts/generate_eval_manifest.py \
 ```bash
 # Compatibility (no GPU required, ~6 s)
 pytest tests/test_compatibility.py -v
-
-# Accuracy regression (GPU required)
-pytest tests/test_regression_reference.py -v \
-    --checkpoint checkpoints/closed_loop_v6
 ```
 
 ## Hardware

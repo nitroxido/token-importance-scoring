@@ -121,7 +121,7 @@ checkpoints/
 │ └─ V2 Stage 1: Oracle-labeled TIS
 │ └─ Results: 100% NIAH @ all budgets, 46% LITM
 │
-├── stage3_ert_learned/ (512 MB) ⭐
+├── stage3_ert/ (512 MB) ⭐
 │ └─ V3: ERT constraint-aware learned baseline
 │ └─ Results: 100% NIAH @ all budgets, 52.8% LITM @ 50%
 │ └─ USE THIS FOR REPRODUCTION VALIDATION
@@ -261,9 +261,9 @@ After cloning this repository:
 - [ ] Read REPOSITORY-OVERVIEW.md
 - [ ] Create and activate virtual environment: `python -m venv .venv && source .venv/bin/activate`
 - [ ] Install dependencies: `pip install -e .`
-- [ ] Run `python scripts/eval_niah_hard.py --checkpoint-path checkpoints/stage3_ert_learned`
+- [ ] Run `python scripts/eval_niah_hard.py --checkpoint-path checkpoints/stage3_ert`
  - Expected: 100% NIAH @ all budgets in ~20 minutes
-- [ ] Run `python scripts/eval_litm.py --checkpoint-path checkpoints/stage3_ert_learned`
+- [ ] Run `python scripts/eval_litm.py --checkpoint-path checkpoints/stage3_ert`
  - Expected: 52.8% LITM @ 50%, 69.4% @ 75%
 - [ ] Review REPRODUCIBILITY-GUIDE.md Part 4 for expected outputs
 - [ ] Check results/comparison_tables.md for full baseline comparison

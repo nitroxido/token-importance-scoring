@@ -127,7 +127,7 @@ cd token-importance-huggingface-release
 
 # 3. Users will:
 pip install -r requirements.txt # (or pip install transformers peft torch)
-python scripts/eval_niah_hard.py --checkpoint-path checkpoints/stage3_ert_learned
+python scripts/eval_niah_hard.py --checkpoint-path checkpoints/stage3_ert
 # Result in ~20 min: 100% NIAH @ all budgets
 ```
 
@@ -148,7 +148,7 @@ less PROJECT-EVOLUTION-REPORT.md # 30 min
 less TROPHY-SYSTEM-EXECUTION-BRIEF.md # 15 min
 
 # 4. Reproduce results
-python scripts/eval_niah_hard.py --checkpoint-path checkpoints/stage3_ert_learned
+python scripts/eval_niah_hard.py --checkpoint-path checkpoints/stage3_ert
 # Download checkpoint or follow CHECKPOINT_AND_DATA_DOWNLOADS.txt
 
 # 5. Extend with Phase 4
@@ -256,7 +256,7 @@ unzip token-importance-huggingface-release.zip
 
 Create structure:
 ```
-your-org/tis-base/
+oldman-dev/tis-stage1-oracle/
 ├── README.md (use HUGGINGFACE-RELEASE-README.md)
 ├── code/
 │ ├── scripts/
@@ -271,18 +271,18 @@ your-org/tis-base/
 ### 3. Upload Checkpoints Separately (Optional)
 
 ```
-your-org/tis-stage3-ert/
+oldman-dev/tis-stage3-ert/
 ├── pytorch_model.bin (512 MB)
 ├── adapter_config.json
 └── config.json
 
-your-org/tis-v8b-hard-anchor/
+oldman-dev/tis-v8b-hard-anchor/
 ├── pytorch_model.bin (512 MB)
 ├── adapter_config.json
 └── config.json
 ```
 
-Users download via: `huggingface-cli download your-org/tis-stage3-ert --local-dir checkpoints/`
+Users download via: `huggingface-cli download oldman-dev/tis-stage3-ert --local-dir checkpoints/`
 
 ### 4. Community Engagement
 

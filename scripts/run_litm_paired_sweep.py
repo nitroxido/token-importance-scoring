@@ -41,7 +41,7 @@ if _ROOT not in sys.path:
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 BASE_MODEL = "unsloth/mistral-7b-instruct-v0.3-bnb-4bit"
-CHECKPOINT  = os.path.join(_ROOT, "checkpoints", "v8b_hard_anchor")
+_DEFAULT_CHECKPOINT = os.path.join(_ROOT, "checkpoints", "v8b_hard_anchor")
 DATA_PATH   = os.path.join(_ROOT, "data", "msmarco_quick", "train")
 RESULTS_DIR = os.path.join(_ROOT, "results")
 D_MODEL     = 4096
@@ -49,6 +49,9 @@ D_MODEL     = 4096
 
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Paired LITM position sweep")
+    p.add_argument("--checkpoint", default=_DEFAULT_CHECKPOINT,
+                   help="Path to checkpoint directory containing tis_components.pt "
+                        "(default: checkpoints/v8b_hard_anchor)")
     p.add_argument("--n-examples", type=int, default=60,
                    help="Number of base MS-MARCO examples (×3 positions PAIRED)")
     p.add_argument("--k-passages", type=int, default=5,
@@ -81,11 +84,11 @@ def load_model_and_tokenizer(device: str):
     return model, tokenizer
 
 
-def load_tis_head(device: str):
+def load_tis_head(checkpoint_dir: str, device: str):
     from token_importance.config import TISConfig
     from token_importance.model.importance_head import ImportanceUpdateHead
 
-    ckpt_path = os.path.join(CHECKPOINT, "tis_components.pt")
+    ckpt_path = os.path.join(checkpoint_dir, "tis_components.pt")
     print(f"[setup] Loading TIS head from {ckpt_path}...", flush=True)
     state = torch.load(ckpt_path, map_location="cpu", weights_only=True)
     tis_config = TISConfig()
@@ -384,7 +387,7 @@ def main():
     
     # Load
     model, tokenizer = load_model_and_tokenizer(args.device)
-    tis_head = load_tis_head(args.device)
+    tis_head = load_tis_head(args.checkpoint, args.device)
     examples = load_msmarco_examples_paired(args.n_examples, args.k_passages)
     
     # Metadata
@@ -396,7 +399,7 @@ def main():
             "quantization": "4-bit NF4"
         },
         "scorer_details": {
-            "checkpoint_path": CHECKPOINT,
+            "checkpoint_path": args.checkpoint,
             "scorer_type": "query_trained_head",
         },
         "dataset": {
