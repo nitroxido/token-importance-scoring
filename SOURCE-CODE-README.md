@@ -1,277 +1,196 @@
-# Source Code for Token Importance Scoring (TIS) v8b
+# Source Code — Token Importance Scoring (TIS)
 
-This archive contains the complete Python source code for reproducing Token Importance Scoring experiments and generating all benchmark results.
+Complete Python source for reproducing all TIS experiments including NIAH,
+LITM, and speculative decoding results.
 
-## Contents
+## Package Structure
 
 ```
-src/token_importance/          # Main package source code
-├── model/                      # Neural network architectures
-│   ├── importance_head.py      # Core TIS importance scoring head with RMSNorm
-│   ├── importance_head_architectures.py   # Various head variants
-│   ├── query_aware.py          # Query-aware importance mechanisms
-│   ├── transformer_postnorm.py # Post-norm transformer blocks
-│   └── patched_model.py        # Mistral-7B-v0.3 patching utilities
-├── training/                   # Training data loaders and objectives
-│   ├── objectives.py           # ERT loss, alignment losses, stability losses
-│   ├── data.py                 # Base data loading infrastructure
-│   ├── msmarco_data.py         # MS-MARCO retrieval dataset loader
-│   ├── litm_dataloader.py      # LITM (Long Input Token Marshalling) dataset
-│   └── loss_functions.py       # Loss function implementations
-├── eval/                       # Evaluation and benchmarking
-│   ├── benchmarks.py           # NIAH, LITM, MultiDoc benchmark implementations
-│   ├── baselines.py            # Baseline methods (Vanilla, StreamingLLM, H2O, SnapKV, etc.)
-│   └── __init__.py
-├── cache/                      # KV cache management
-│   ├── eviction.py             # Cache eviction strategies
-│   ├── importance_store.py     # Importance score storage
-│   ├── model_cache.py          # Cache integration with models
-│   └── dataset_cache.py        # Dataset caching
-├── markup/                     # LLM-based token marking (Scout)
-│   ├── parser.py               # Parse LLM markup outputs
-│   └── scout.py                # Scout agent for importance annotation
-├── utils/                      # Utilities
-│   ├── gumbel_topk.py          # Gumbel-softmax for differentiable top-k
-│   └── __init__.py
-├── config.py                   # Configuration management
-└── __init__.py
+src/token_importance/
+├── model/
+│   ├── importance_head.py          # ImportanceUpdateHead with direct_score()
+│   ├── importance_embedding.py     # ImportanceEmbedding (score → hidden delta)
+│   ├── importance_attn.py          # ImportanceAttnBiasHook
+│   ├── patched_model.py            # PatchedCausalLM wrapper
+│   ├── tis_drafter.py              # TISDrafter for speculative decoding (Phase 5)
+│   ├── drafter_attn_bias.py        # DrafterImportanceAttnBias (depth-scaled)
+│   └── drafter_wrapper.py          # TISAwareDrafter wrapper
+├── training/
+│   ├── retrieval_data.py           # RetrievalDataset for closed-loop training
+│   ├── litm_data.py                # LITMDataset for query-aware training
+│   ├── objectives.py               # ERT loss, alignment losses
+│   └── loss_functions.py           # Ranking, retrieval, stability losses
+├── eval/
+│   ├── benchmarks.py               # NIAH, LITM, MultiDoc benchmarks
+│   │                               # Policies: tis, tis_head, tis_key_match, tis_hybrid
+│   └── baselines.py                # Vanilla, StreamingLLM, H2O, SnapKV
+├── cache/
+│   ├── importance_store.py         # Per-token importance score storage
+│   └── eviction.py                 # Budget-based eviction policies
+└── config.py                       # TISConfig
 
-scripts/                        # Training and evaluation scripts
-├── train_ert.py                # Train TIS with ERT objective (two-forward-pass KL)
-├── train_phase4.py             # Phase 4: Query-aware importance training
-├── eval.py                     # Evaluate checkpoint on benchmarks
-├── eval_niah_hard.py           # NIAH benchmark evaluation
-├── train_supervised_litm.py    # Supervised training on LITM dataset
-└── [other experimental scripts]
+scripts/
+├── eval.py                         # Main evaluation (NIAH / LITM / MultiDoc)
+├── eval_niah_hard.py               # Hard-NIAH: heuristic vs learned vs snapkv_proxy
+├── train_closed_loop_retrieval.py  # Phase 3: closed-loop retrieval TIS training
+├── train_drafter_tis_aware.py      # Phase 5: TIS-aware drafter training
+├── run_speculative_decoding_tis.py # Phase 5: real speculative decoding evaluation
+├── generate_eval_manifest.py       # Reproducibility manifest generator
 
-pyproject.toml                  # Python package configuration and dependencies
-.env.example                    # Example environment variables
+tests/
+├── test_compatibility.py           # API compatibility suite (13 tests, no GPU)
+└── test_regression_reference.py    # Accuracy regression suite (GPU required)
 ```
 
 ## Installation
 
-1. **Extract the archive:**
-```bash
-tar -xzf token-importance-source-code.tar.gz
-```
-
-2. **Install dependencies:**
 ```bash
 pip install -e .
-# or install with dev dependencies:
-pip install -e ".[dev]"
+# Verify
+python -c "from token_importance.model.importance_head import ImportanceUpdateHead; print('OK')"
 ```
 
-3. **Install required packages manually (if needed):**
+## Scorer Paths
+
+Two distinct scoring paths are used in this codebase. They are not interchangeable.
+
+| Path name | Code | Description |
+|---|---|---|
+| `direct_token_scorer` | `head.direct_score(hidden)` | Per-token `out_proj(hidden)`. Used by evaluation and closed-loop training. |
+| `runtime_cross_attn_update` | `head.forward(current, context)` | Broadcasts cross-attention vector to all positions. Used during dynamic inference rescoring. |
+| `tis_key_match` | `_key_match_keep_indices()` | Text-based query parse: finds queried key in context, scores its tokens. Best LITM performance. |
+
+## Transformers Compatibility
+
+- **Transformers 4.x**: Full inference path (`PatchedCausalLM.forward`, `.generate`) supported.
+- **Transformers 5.x**: The SDPA attention layout changed. `PatchedCausalLM.forward` is incompatible. A `UserWarning` is raised at load time. The `direct_token_scorer` path works correctly on all versions.
+
+## Phase 3: Closed-Loop Retrieval Training
+
+Trains `ImportanceUpdateHead` to score evidence tokens above distractors.
+
 ```bash
-pip install torch>=2.4.0 transformers>=4.36 peft>=0.11 datasets numpy
+python scripts/train_closed_loop_retrieval.py \
+    --base-model mistralai/Mistral-7B-v0.3 \
+    --base-checkpoint checkpoints/stage3_ert \
+    --output-dir checkpoints/my_tis \
+    --steps 2000 \
+    --alpha-rank 1.0 \
+    --beta-retrieve 2.0 \
+    --gamma-stability 0.5 \
+    --device cuda
 ```
 
-## Quick Start: Reproducing Results
-
-### Setup Environment
+The `--base-model` argument accepts any causal LM. For LLaMA-based targets:
 
 ```bash
-# Set environment variables
-export $PROJECT_DIR=$(pwd)
-python -c "import torch; print(f'CUDA Available: {torch.cuda.is_available()}')"
-python -c "import torch; print(f'VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB')"
+python scripts/train_closed_loop_retrieval.py \
+    --base-model unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit \
+    ...
 ```
 
-### 1. Download Base Model and Datasets
+## Phase 4: LITM Evaluation
+
+Three eviction policies for the LITM benchmark:
 
 ```bash
-# Download Mistral-7B-v0.3 from HuggingFace
-huggingface-cli download mistralai/Mistral-7B-v0.3
-
-# Download NIAH benchmark (synthetic)
-python -c "from src.token_importance.eval.benchmarks import NIAH; NIAH.download()"
-
-# Download LITM benchmark  
-python -c "from src.token_importance.eval.benchmarks import LITM; LITM.download()"
-
-# Download MS-MARCO for training (Phase 4)
-python -c "from src.token_importance.training.msmarco_data import download_msmarco; download_msmarco()"
-```
-
-### 2. Train TIS v8b (ERT Objective)
-
-This uses the working configuration from the baseline checkpoint:
-
-```bash
-# Note: Adapt parameters based on actual train_ert.py interface
-# Check available parameters with: python scripts/train_ert.py --help
-python scripts/train_ert.py \
-  --target-model mistralai/Mistral-7B-v0.3 \
-  --output-dir checkpoints/stage3_ert_fresh \
-  --batch-size 1 \
-  --grad-accumulation 8 \
-  --learning-rate 5e-4 \
-  --dtype bfloat16
-
-# See scripts/train_ert.py for full parameter list
-```
-
-**Key parameters:**
-- `--batch-size 1` (for limited GPU memory)
-- `--grad-accumulation 8` (effective batch size 8)
-- `--dtype bfloat16` (reduces VRAM usage)
-
-**Expected results** (after training):
-- NIAH @ 50%: ~100%
-- LITM @ 50%: ~53%
-- Generation quality: ~67%
-
-### 3. Evaluate on Benchmarks
-
-```bash
-# Evaluate trained checkpoint on NIAH benchmark
+# tis: oracle uniform (49.4% @ 50% budget)
 python scripts/eval.py \
-  --model checkpoints/stage3_ert_fresh \
-  --baseline tis \
-  --benchmark niah \
-  --cache_budgets 0.25 0.5 0.75 1.0 \
-  --output results/niah_evaluation.csv
+    --model mistralai/Mistral-7B-v0.3 --load_in_4bit \
+    --baseline tis --benchmark litm \
+    --checkpoint checkpoints/my_tis \
+    --cache_budgets 0.5 0.75 --n_samples 20
 
-# View results
-cat results/niah_evaluation.csv
+# tis_head: learned head scoring (66.1% @ 50%)
+python scripts/eval.py ... --baseline tis_head ...
+
+# tis_key_match: query-aware key matching (82.8% @ 50%, 100% @ 75%)
+python scripts/eval.py ... --baseline tis_key_match ...
 ```
 
-### 4. Compare with Baselines
+`tis_key_match` parses the queried key from the question ("What is the value for key 'X'?"),
+locates it in the context, and scores its tokens 200 (high priority). No training required.
 
-```bashuse eval.py with different baselines)
-python scripts/eval.py \
-  --model mistralai/Mistral-7B-v0.3 \
-  --baseline vanilla \
-  --benchmark niah \
-  --cache_budgets 0.5 \
-  --n_samples 10 \
-  --output results/vanilla_baseline.csv
+## Phase 5: Speculative Decoding
 
-# Repeat for other baselines: h2o, streamingllm, snapkv, infini_attenti
-
-```
-
-## Architecture Details
-
-### Core Innovation: Two-Forward-Pass ERT Loss
-
-The key difference from standard supervised training is the **Efficient Retrieval Training (ERT)** objective:
-
-```
-Loss = KL(logits_full || logits_evicted) + align_weight * alignment_loss + stability_loss
-```
-
-Where:
-- `logits_full`: Full model (all tokens, computed with grad)
-- `logits_evicted`: Model with unimportant tokens removed (computed no_grad for efficiency)
-- `alignment_loss`: Encourages importance scores to align with gradient-based importance
-- `stability_loss`: Prevents magnitude drift in attention layers
-
-See `src/token_importance/training/objectives.py` for implementation.
-
-### Hard-Anchor Forcing
-
-Ensures certain tokens (query, evidence) are **never** evicted during training:
-
-```python
-from src.token_importance.training.objectives import HardAnchorForcing
-
-hard_anchor = HardAnchorForcing(
-    query_positions=[0:query_len],          # Query always kept
-    evidence_positions=[total-evidence_len:]  # Evidence always kept
-)
-```
-
-### RMSNorm Stabilization (Post-Norm)
-
-Reduces attention drift by normalizing **after** the residual connection:
-
-```python
-# Instead of: y = norm(x + attn(x))
-# Use:        y = x + norm(attn(x))
-```
-
-See `src/token_importance/model/transformer_postnorm.py`.
-
-## Hardware Requirements
-
-**Minimum (tested on RTX 5070 - 8GB VRAM):**
-- Batch size: 1 (forced by memory)
-- Gradient accumulation: 8
-- Mixed precision: bfloat16
-- Peak memory: ~5.5GB (68% utilization)
-
-**Recommended (for faster training):**
-- RTX 6000 or A100 (40GB+)
-- Batch size: 4-8
-- Gradient accumulation: 2
-- Mixed precision: bfloat16
-
-## Dataset Formats
-
-### NIAH (Synthetic)
-Position-explicit needle-in-haystack evaluation. 450 samples per budget.
-
-### LITM (Semantic)
-Real semantic question answering over long documents. 1000 samples per budget.
-
-### MultiDoc (Real-world)
-Multi-document retrieval task with realistic length and complexity.
-
-### MS-MARCO (Training)
-Large-scale retrieval dataset for Phase 4 query-aware training.
-
-## Configuration
-
-Edit `.env` to customize paths and hardware settings:
+### Setup
 
 ```bash
-PROJECT_DIR=/path/to/token-importance
-HF_HOME=$PROJECT_DIR/huggingface_cache
-CUDA_VISIBLE_DEVICES=0
-MAX_MEMORY_GB=8  # Adjust for your GPU
-BATCH_SIZE=1
-GRAD_ACCUM_STEPS=8
+# Download models (ungated, same 128K LLaMA vocabulary)
+python -c "
+from huggingface_hub import snapshot_download
+snapshot_download('unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit')
+snapshot_download('unsloth/Llama-3.2-1B-Instruct-bnb-4bit')
+"
+
+# Train TIS for LLaMA-3.1-8B
+python scripts/train_closed_loop_retrieval.py \
+    --base-model unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit \
+    --base-checkpoint checkpoints/stage3_ert \
+    --output-dir checkpoints/llama31_tis \
+    --steps 2000 --device cuda
 ```
 
-## Troubleshooting
+### Run Speculative Decoding Evaluation
 
-### Out of Memory (OOM)
-- Reduce `batch_size` (minimum is 1)
-- Reduce `gradient_accumulation_steps`
-- Enable `--mixed_precision bfloat16`
-- Clear cache: `torch.cuda.empty_cache()`
-
-### Poor Training Performance
-- Check learning rate (default 5e-4)
-- Verify `use_rms_norm` is enabled
-- Ensure `use_hard_anchor_forcing` is active
-- Check alignment loss weight (default 0.3)
-
-### Slow Evaluation
-- Evaluate on subset of benchmarks: `--benchmark niah`
-- Reduce context length for testing: `--max_length 4096`
-
-## Citation
-
-If you use this code, please cite:
-
-```bibtex
-@misc{token_importance_2025,
-  title={Token Importance Scoring v8b: KV Cache Compression for Long-Context LLMs},
-  author={...},
-  year={2025}
-}
+```bash
+python scripts/run_speculative_decoding_tis.py \
+    --tis-checkpoint checkpoints/llama31_tis \
+    --n-examples 30 --max-depth 8 \
+    --lambda-d 0.2 \
+    --output results/phase5_spec_decoding.json \
+    --device cuda
 ```
 
-## License
+### How TIS Bias Works
 
-MIT License - see [LICENSE](../LICENSE) file for details
+The `TISEmbeddingBias` hook scales the drafter's token embeddings:
 
-## Support
+```
+scale(token_i) = 1.0 + λ_d(k) × (importance_i / 100 − 0.5) × 2
+```
 
-For questions or issues:
-1. Check the REPRODUCIBILITY-GUIDE.md in the documentation
-2. Review error logs in `logs/`
-3. Test with minimal example: `python scripts/test_baselines.py`
+- Tokens with importance ≥ 70: scaled UP (more attention)
+- Tokens with importance ≤ 30: scaled DOWN (less attention)
+- Lambda grows with depth: `λ_d(k) = 0.2 × (1 + 0.1 × k)`
+
+This is Transformers-5-compatible (no attention internals patched).
+
+### Results (n=30, max_depth=8)
+
+| Condition | Accept Length | Speedup | Drift @k=7 |
+|---|---|---|---|
+| No TIS bias | 5.83 / 8 | 0.648 | 0.980 (−2%, drifting) |
+| TIS depth-scaled | **6.57 / 8** | **0.730** | **1.022** (+2.2%, anchored) |
+
+## Reproducibility
+
+### Checkpoint Manifest
+
+Every checkpoint ships with `eval_manifest.json`:
+
+```bash
+python scripts/generate_eval_manifest.py \
+    --checkpoint checkpoints/my_tis \
+    --eval-script scripts/eval_niah_hard.py
+```
+
+### Test Suites
+
+```bash
+# Compatibility (no GPU required, ~6 s)
+pytest tests/test_compatibility.py -v
+
+# Accuracy regression (GPU required)
+pytest tests/test_regression_reference.py -v \
+    --checkpoint checkpoints/closed_loop_v6
+```
+
+## Hardware
+
+| Task | VRAM | Time |
+|---|---|---|
+| NIAH evaluation (50 samples) | 6 GB | ~5 min |
+| LITM evaluation (n=20, 3 budgets) | 6 GB | ~12 min |
+| Closed-loop training (2000 steps) | 6 GB | ~10 min |
+| Speculative decoding (n=30) | 7.5 GB | ~25 min |
