@@ -1,0 +1,272 @@
+base_id,query_id,position_name,original_gold_position,tis_gold_rank,recall_at_1,baseline_correct,tis_correct,transition,baseline_prediction,tis_prediction,answer
+0,638438,early,0,2,0,0,0,same_wrong,"Ring-shaped, discoloured plaques",Ring-shaped or annular plaques,A ring of small red or skin-coloured bumps
+0,638438,middle,2,2,0,0,0,same_wrong,Ring-shaped or annular plaques,Ring-shaped or annular plaques,A ring of small red or skin-coloured bumps
+0,638438,end,4,2,0,0,0,same_wrong,Ring-shaped or annular plaques,Ring-shaped or annular plaques,A ring of small red or skin-coloured bumps
+1,414563,early,0,1,0,0,0,same_wrong,"No, not all fish (e.g., tuna, swordfish, wild salmon). Safe options: farmed salmon, tilap","Passage 2: Yes, salmon
+Passage 3: Yes, salmon
+Passage 5: Depends on the source","Yes, it safe to eat salmon every day."
+1,414563,middle,2,1,0,0,0,same_wrong,"Salmon, tilapia, rainbow trout (Passage 4)","Passage 2: Yes, salmon
+Passage 3: Yes, salmon
+Passage 5: Depends on the source","Yes, it safe to eat salmon every day."
+1,414563,end,4,1,0,0,0,same_wrong,Salmon (yes),"Passage 2: Yes, salmon
+Passage 3: Yes, salmon
+Passage 5: Depends on the source","Yes, it safe to eat salmon every day."
+2,389677,early,0,0,1,0,0,same_wrong,Early 2018,"First new-build, Asia Pacific (Passage 1, 2)
+Expected to open in early 2018 (Passage",Hyatt Centric Ginza Tokyo will be the first new-build Hyatt Centric hotel in Asia Pacific and the second internationally.
+2,389677,middle,2,0,1,0,0,same_wrong,"Asia Pacific, first new-build","First new-build, Asia Pacific (Passage 1, 2)
+Expected to open in early 2018 (Passage",Hyatt Centric Ginza Tokyo will be the first new-build Hyatt Centric hotel in Asia Pacific and the second internationally.
+2,389677,end,4,0,1,0,0,same_wrong,"First new-build in Asia Pacific, second internationally","First new-build, Asia Pacific (Passage 1, 2)
+Expected to open in early 2018 (Passage",Hyatt Centric Ginza Tokyo will be the first new-build Hyatt Centric hotel in Asia Pacific and the second internationally.
+3,486790,early,0,1,0,0,0,same_wrong,® Symbol Definition: Indicates a registered trademark,® symbol definition: A symbol indicating that a trademark is registered.,"A recognizable sign, design, or expression which identifies products or services of a particular source from those of others."
+3,486790,middle,2,1,0,0,0,same_wrong,® Symbol (Registration Mark),® symbol definition: A symbol indicating that a trademark is registered.,"A recognizable sign, design, or expression which identifies products or services of a particular source from those of others."
+3,486790,end,4,1,0,0,0,same_wrong,® Symbol Definition: Registered trademark,® symbol definition: A symbol indicating that a trademark is registered.,"A recognizable sign, design, or expression which identifies products or services of a particular source from those of others."
+4,50251,early,0,3,0,0,0,same_wrong,"Boosts manufacturing sector, helps sell U.S. goods overseas, benefits European retailers, benefits U.S. manufacturers, exports advantage.","Export stimulus, manufacturing sector, overseas market prices, European retailers, terms of trade improvement.","The Benefits of a Weak Dollar Despite expressions to the contrary by politicos and economists, the nature of a weak dollar can actually benefit stagnated portions of our economy."
+4,50251,middle,2,3,0,0,0,same_wrong,"Export stimulus, manufacturing sector, U.S. made goods, overseas markets, Asian products.","Export stimulus, manufacturing sector, overseas market prices, European retailers, terms of trade improvement.","The Benefits of a Weak Dollar Despite expressions to the contrary by politicos and economists, the nature of a weak dollar can actually benefit stagnated portions of our economy."
+4,50251,end,4,3,0,0,0,same_wrong,"Export stimulus, manufacturing sector, overseas markets, Asian products","Export stimulus, manufacturing sector, overseas market prices, European retailers, terms of trade improvement.","The Benefits of a Weak Dollar Despite expressions to the contrary by politicos and economists, the nature of a weak dollar can actually benefit stagnated portions of our economy."
+5,590061,early,0,1,0,0,0,same_wrong,"Hip dysplasia, osteochondritis dissecans, or femoro-acetabular impingement (FAI","Passage 3 suggests the cause of your hip pain is unknown, but it hurts on the back side of your left hip, worsens","1 Aseptic necrosis of bone. 2 Fracture, neck of femur. 3 Hip dysplasia, congenital. 4 Juvenile osteochondrosis of head of femur. 5 Multiple epiphyseal dysplasia. 6 Osteochondritis dissecans. 7 Slipped upper femoral epiphysis."
+5,590061,middle,2,1,0,0,0,same_wrong,"Hip pain causes (from passages):
+1. Muscle or bone issue (Passage 1)
+2. Non-surg","Passage 3 suggests the cause of your hip pain is unknown, but it hurts on the back side of your left hip, worsens","1 Aseptic necrosis of bone. 2 Fracture, neck of femur. 3 Hip dysplasia, congenital. 4 Juvenile osteochondrosis of head of femur. 5 Multiple epiphyseal dysplasia. 6 Osteochondritis dissecans. 7 Slipped upper femoral epiphysis."
+5,590061,end,4,1,0,0,0,same_wrong,Femoro-acetabular impingement (FAI),"Passage 3 suggests the cause of your hip pain is unknown, but it hurts on the back side of your left hip, worsens","1 Aseptic necrosis of bone. 2 Fracture, neck of femur. 3 Hip dysplasia, congenital. 4 Juvenile osteochondrosis of head of femur. 5 Multiple epiphyseal dysplasia. 6 Osteochondritis dissecans. 7 Slipped upper femoral epiphysis."
+6,1184772,early,0,3,0,0,0,same_wrong,Expel from a country,Expel from a country,Deport is defined as to expel from a county.
+6,1184772,middle,2,3,0,0,0,same_wrong,Expel from a country,Expel from a country,Deport is defined as to expel from a county.
+6,1184772,end,4,3,0,0,0,same_wrong,Expel from a country,Expel from a country,Deport is defined as to expel from a county.
+7,523785,early,0,0,1,0,0,same_wrong,"1. Change in form or appearance
+2. Change in composition or structure
+3. Change in character or condition
+4. Change in an","1. Change in form or appearance
+2. Change in composition or structure
+3. Change in character or condition
+4. Acquisition",It is a dramatic change in form or appearance.
+7,523785,middle,2,0,1,0,0,same_wrong,"1. Change in composition or structure
+2. Change in character or condition
+3. Change in form
+4. Acquisition of genetic","1. Change in form or appearance
+2. Change in composition or structure
+3. Change in character or condition
+4. Acquisition",It is a dramatic change in form or appearance.
+7,523785,end,4,0,1,0,0,same_wrong,"1. Change in composition or structure
+2. Change in character or condition
+3. Change in genetic material
+4. Changes in cultured","1. Change in form or appearance
+2. Change in composition or structure
+3. Change in character or condition
+4. Acquisition",It is a dramatic change in form or appearance.
+8,741765,early,0,3,0,0,0,same_wrong,Horse bedding,Combining straw and wood shavings,It is the modular multifunctional furniture solution for sitting and sleeping.
+8,741765,middle,2,3,0,0,0,same_wrong,"Combination of straw and wood shavings (Passage 1)
+
+Modular multifunctional furniture (Passage 3)",Combining straw and wood shavings,It is the modular multifunctional furniture solution for sitting and sleeping.
+8,741765,end,4,3,0,0,0,same_wrong,Horse bedding,Combining straw and wood shavings,It is the modular multifunctional furniture solution for sitting and sleeping.
+9,285040,early,0,1,0,0,0,same_wrong,"5 (Passage 1), 5 (Passage 4)","5 (Passage 1), 1.75-2.25 (Passage 2), around 5 (Passage",3-ounce potato has about 1.75 to 2.25 grams of protein.
+9,285040,middle,2,1,0,0,0,same_wrong,1.75-2.25 grams (Passage 3),"5 (Passage 1), 1.75-2.25 (Passage 2), around 5 (Passage",3-ounce potato has about 1.75 to 2.25 grams of protein.
+9,285040,end,4,1,0,0,0,same_wrong,1.75 to 2.25 grams (depending on the type),"5 (Passage 1), 1.75-2.25 (Passage 2), around 5 (Passage",3-ounce potato has about 1.75 to 2.25 grams of protein.
+10,449394,early,0,2,0,0,1,wrong_to_right,"Attainer, achiever",Successful,Successful
+10,449394,middle,2,2,0,1,1,same_correct,Successful,Successful,Successful
+10,449394,end,4,2,0,1,1,same_correct,Successful,Successful,Successful
+11,471797,early,0,4,0,1,1,same_correct,Visceral,Visceral,Visceral peritoneum.
+11,471797,middle,2,4,0,1,1,same_correct,Visceral,Visceral,Visceral peritoneum.
+11,471797,end,4,4,0,1,1,same_correct,Visceral,Visceral,Visceral peritoneum.
+12,698805,early,0,4,0,0,0,same_wrong,Salpingectomies are the surgical removal of one or both fallopian tubes.,Salpingectomies,Salpingectomy is the surgical removal of one or both fallopian tubes.
+12,698805,middle,2,4,0,0,0,same_wrong,Salpingectomies are the surgical removal of one or both fallopian tubes.,Salpingectomies,Salpingectomy is the surgical removal of one or both fallopian tubes.
+12,698805,end,4,4,0,0,0,same_wrong,Salpingectomies are the surgical removal of one or both fallopian tubes.,Salpingectomies,Salpingectomy is the surgical removal of one or both fallopian tubes.
+13,451159,early,0,3,0,0,0,same_wrong,20% or more over ideal body weight,20% above ideal body weight or BMI > 30,"An abnormal accumulation of body fat, usually 20% or more over an individual's ideal body weight."
+13,451159,middle,2,3,0,0,0,same_wrong,20% or more over ideal body weight,20% above ideal body weight or BMI > 30,"An abnormal accumulation of body fat, usually 20% or more over an individual's ideal body weight."
+13,451159,end,4,3,0,0,0,same_wrong,20% or more over ideal body weight,20% above ideal body weight or BMI > 30,"An abnormal accumulation of body fat, usually 20% or more over an individual's ideal body weight."
+14,60554,early,0,3,0,0,1,wrong_to_right,"10 (Passage 5) or 5 (Passage 3, assuming 5 pieces)",10 (from Passage 3) or 50 (from Passage 4),50
+14,60554,middle,2,3,0,0,1,wrong_to_right,10 (Passage 5),10 (from Passage 3) or 50 (from Passage 4),50
+14,60554,end,4,3,0,0,1,wrong_to_right,"10 (Passage 4) or 0 (Passage 1, 3, or 4)",10 (from Passage 3) or 50 (from Passage 4),50
+15,1185869,early,0,2,0,0,0,same_wrong,Ended World War II,Ended World War II,The immediate impact of the success of the manhattan project was the only cloud hanging over the impressive achievement of the atomic researchers and engineers is what their success truly meant; hundreds of thousands of innocent lives obliterated.
+15,1185869,middle,2,2,0,0,0,same_wrong,Ended World War II,Ended World War II,The immediate impact of the success of the manhattan project was the only cloud hanging over the impressive achievement of the atomic researchers and engineers is what their success truly meant; hundreds of thousands of innocent lives obliterated.
+15,1185869,end,4,2,0,0,0,same_wrong,Ended World War II,Ended World War II,The immediate impact of the success of the manhattan project was the only cloud hanging over the impressive achievement of the atomic researchers and engineers is what their success truly meant; hundreds of thousands of innocent lives obliterated.
+16,1174737,early,0,3,0,1,0,right_to_wrong,Yes,"Yes, the North Pole is in the Arctic.","Yes, The north pole is in arctic."
+16,1174737,middle,2,3,0,0,0,same_wrong,"Yes, the North Pole is in the Arctic.","Yes, the North Pole is in the Arctic.","Yes, The north pole is in arctic."
+16,1174737,end,4,3,0,0,0,same_wrong,"Yes, the North Pole is in the Arctic.","Yes, the North Pole is in the Arctic.","Yes, The north pole is in arctic."
+17,308145,early,0,0,1,0,0,same_wrong,"$12,585 (Passage 1 and 2)","$12,000-$13,247 (Passage 1, 2)",Ranges from $12000 to $13247
+17,308145,middle,2,0,1,0,0,same_wrong,"$12,585 (Passage 1, 3)","$12,000-$13,247 (Passage 1, 2)",Ranges from $12000 to $13247
+17,308145,end,4,0,1,0,0,same_wrong,"$12,000-$13,247 (or $12,585 on average)","$12,000-$13,247 (Passage 1, 2)",Ranges from $12000 to $13247
+18,144940,early,0,3,0,1,1,same_correct,"No, they did not divorce.","No, they did not divorce.",No
+18,144940,middle,2,3,0,1,1,same_correct,"No, they did not divorce.","No, they did not divorce.",No
+18,144940,end,4,3,0,1,1,same_correct,"No, they did not divorce.","No, they did not divorce.",No
+19,563205,early,0,0,1,0,0,same_wrong,"Phishing (Passage 1), LivePhish (Passage 3), Phish.net (Passage 5)","1. Phishing, 2. LivePhish, 3. The Spreadsheet, 4. phishtracks.",Phish is try to obtain financial or other confidential information from Internet users.
+19,563205,middle,2,0,1,0,0,same_wrong,"Phish: 1. Band, 2. Scam (Phishing), 5. Website (phish.net)","1. Phishing, 2. LivePhish, 3. The Spreadsheet, 4. phishtracks.",Phish is try to obtain financial or other confidential information from Internet users.
+19,563205,end,4,0,1,0,0,same_wrong,Phishing scam,"1. Phishing, 2. LivePhish, 3. The Spreadsheet, 4. phishtracks.",Phish is try to obtain financial or other confidential information from Internet users.
+20,601802,early,0,0,1,0,0,same_wrong,White blood cells (WBC),White blood cells (WBC),0-5 wbc/hpf
+20,601802,middle,2,0,1,0,0,same_wrong,White blood cells (WBC),White blood cells (WBC),0-5 wbc/hpf
+20,601802,end,4,0,1,0,0,same_wrong,White blood cells (WBCs),White blood cells (WBC),0-5 wbc/hpf
+21,486131,early,0,0,1,0,0,same_wrong,"1. GMAW: 75% He, 25% Ar
+2. Short-circuiting welding of stain","1. Mixtures (e.g. 75% Ar / 25% He)
+2. 90% He","Consider adding helium to the shielding gas mixture for its ability to provide a hotter, more penetrating arc on thicker sections."
+21,486131,middle,2,0,1,0,0,same_wrong,"Mixtures, percentages (e.g. 75% Ar/25% CO2 or 75Ar/25He","1. Mixtures (e.g. 75% Ar / 25% He)
+2. 90% He","Consider adding helium to the shielding gas mixture for its ability to provide a hotter, more penetrating arc on thicker sections."
+21,486131,end,4,0,1,0,0,same_wrong,"1. MIG/MAG: Argon, He, or Ar/He mixtures
+2. TIG: Argon, He,","1. Mixtures (e.g. 75% Ar / 25% He)
+2. 90% He","Consider adding helium to the shielding gas mixture for its ability to provide a hotter, more penetrating arc on thicker sections."
+22,437665,early,0,0,1,0,0,same_wrong,"100-carat, $16.3 million (Passage 1)
+110.3-carat,",Largest: 110.3-carat (Passage 2),Graff Vivid Yellow
+22,437665,middle,2,0,1,0,0,same_wrong,"100-carat, 110.3-carat (depending on the specific diamond)",Largest: 110.3-carat (Passage 2),Graff Vivid Yellow
+22,437665,end,4,0,1,0,0,same_wrong,100-carat (Passage 5) or 110.3-carat (Passage 4) (,Largest: 110.3-carat (Passage 2),Graff Vivid Yellow
+23,560885,early,0,1,0,0,0,same_wrong,"Passage 1: ceramic, plaster, glass, chemicals, dyed water, wax
+Passage 2: glass, bronze,","Passage 1: Glass, lead
+Passage 2: Ceramic, plaster
+Passage 3: Various materials (not","Lamps made of ceramic or plaster, these were backlit decorative sculptures created in the shape of animals, people, and plants."
+23,560885,middle,2,1,0,0,0,same_wrong,"Glass, metal (bronze, gilt-bronze), ceramic, plaster, wax, liquid (clear or translucent","Passage 1: Glass, lead
+Passage 2: Ceramic, plaster
+Passage 3: Various materials (not","Lamps made of ceramic or plaster, these were backlit decorative sculptures created in the shape of animals, people, and plants."
+23,560885,end,4,1,0,0,0,same_wrong,"Glass, bronze, gilt-bronze, ceramic, plaster, wax, chemicals, dyed water (Lava lamps)","Passage 1: Glass, lead
+Passage 2: Ceramic, plaster
+Passage 3: Various materials (not","Lamps made of ceramic or plaster, these were backlit decorative sculptures created in the shape of animals, people, and plants."
+24,1174744,early,0,1,0,1,1,same_correct,Yes,Yes,"Yes, the Georgian bay is a part of Lake Huron."
+24,1174744,middle,2,1,0,1,1,same_correct,Yes,Yes,"Yes, the Georgian bay is a part of Lake Huron."
+24,1174744,end,4,1,0,1,1,same_correct,Yes,Yes,"Yes, the Georgian bay is a part of Lake Huron."
+25,534802,early,0,2,0,0,0,same_wrong,Not Recommended,"Cannot (Passage 1)
+Component parts (Passage 2)
+Impossible (Passage 3)
+CPAP Pres","A motorized oxygen mask doesn't qualify to most as being on the same plane as actual medication, but it really is."
+25,534802,middle,2,2,0,0,0,same_wrong,"Impossible, Prescription Required","Cannot (Passage 1)
+Component parts (Passage 2)
+Impossible (Passage 3)
+CPAP Pres","A motorized oxygen mask doesn't qualify to most as being on the same plane as actual medication, but it really is."
+25,534802,end,4,2,0,0,0,same_wrong,"Impossible, impossible, impossible, possible (with certain components), impossible","Cannot (Passage 1)
+Component parts (Passage 2)
+Impossible (Passage 3)
+CPAP Pres","A motorized oxygen mask doesn't qualify to most as being on the same plane as actual medication, but it really is."
+26,322427,early,0,0,1,0,0,same_wrong,Not provided in the passage.,"Passage 2: $24,040 (median salary)","The median annual wage for kindergarten teachers, except special education was $52,620 in May 2016."
+26,322427,middle,2,0,1,0,0,same_wrong,Not provided in the passages.,"Passage 2: $24,040 (median salary)","The median annual wage for kindergarten teachers, except special education was $52,620 in May 2016."
+26,322427,end,4,0,1,0,0,same_wrong,Not provided in the passages.,"Passage 2: $24,040 (median salary)","The median annual wage for kindergarten teachers, except special education was $52,620 in May 2016."
+27,187620,early,0,3,0,0,0,same_wrong,Nuclear Fission Theory (not found in given passages),Nuclear Fission (Passage 3),Theory proposes that the Moon was once part of the Earth and somehow separated from the Earth early in the history of the solar system.
+27,187620,middle,2,3,0,0,0,same_wrong,Nuclear Fission Theory Definition: Origin of the Moon due to Earth's early separation.,Nuclear Fission (Passage 3),Theory proposes that the Moon was once part of the Earth and somehow separated from the Earth early in the history of the solar system.
+27,187620,end,4,3,0,0,0,same_wrong,"Nuclear Fission Theory (not applicable)
+Moon Origin Theory (Passage 1, 2, 3, 5)",Nuclear Fission (Passage 3),Theory proposes that the Moon was once part of the Earth and somehow separated from the Earth early in the history of the solar system.
+28,542099,early,0,4,0,0,0,same_wrong,"Manual system, Systemization, In box system, Mail organizer, Designated space, Day planner, Checkbook, Magazine file, Post","1. Manual system, 2. Systemization, 3. In box system, 4. Mail organizer, 5.",Manual and systemization
+28,542099,middle,2,4,0,0,0,same_wrong,"Passage 1: Designated space, schedule time
+Passage 2: In box system, day planner, checkbook
+Passage","1. Manual system, 2. Systemization, 3. In box system, 4. Mail organizer, 5.",Manual and systemization
+28,542099,end,4,4,0,0,0,same_wrong,"1. In box system, mail organizer
+2. Steps: 1-7 (Passage 2)
+3. Paper","1. Manual system, 2. Systemization, 3. In box system, 4. Mail organizer, 5.",Manual and systemization
+29,732181,early,0,4,0,1,1,same_correct,Public institution,Public institution,"Temple College is a public institution in Temple, Texas."
+29,732181,middle,2,4,0,0,1,wrong_to_right,"Public, offers associate degree",Public institution,"Temple College is a public institution in Temple, Texas."
+29,732181,end,4,4,0,1,1,same_correct,Temple College,Public institution,"Temple College is a public institution in Temple, Texas."
+30,571722,early,0,0,1,0,0,same_wrong,"1. Chronic diseases (Passage 1)
+2. Anxiety disorders (Passage 2)
+3. Dement","Heart disease, stroke, cancer, diabetes, dementia, anxiety","Heart disease, stroke, cancer, and diabetes."
+30,571722,middle,2,0,1,0,0,same_wrong,"Dementia, chronic diseases (Heart disease, stroke, cancer, diabetes)","Heart disease, stroke, cancer, diabetes, dementia, anxiety","Heart disease, stroke, cancer, and diabetes."
+30,571722,end,4,0,1,0,0,same_wrong,"Dementia, chronic health conditions","Heart disease, stroke, cancer, diabetes, dementia, anxiety","Heart disease, stroke, cancer, and diabetes."
+31,687403,early,0,1,0,0,0,same_wrong,Hyperlink: A link in a document that connects to another place within the same document or a different document.,A hyperlink is a link in an electronic document that links to another place.,"The most essential ingredient of all hypertext systems, including the World Wide Web."
+31,687403,middle,2,1,0,0,0,same_wrong,Hyperlink: A link to another place in a document or to an entirely different document.,A hyperlink is a link in an electronic document that links to another place.,"The most essential ingredient of all hypertext systems, including the World Wide Web."
+31,687403,end,4,1,0,0,0,same_wrong,Hyperlink: Link in an electronic document,A hyperlink is a link in an electronic document that links to another place.,"The most essential ingredient of all hypertext systems, including the World Wide Web."
+32,586752,early,0,0,1,0,0,same_wrong,"Anxiety, nerve irritation, deep venous thrombosis","Passage 1: Low back problem, anxiety
+Passage 2: Irritated nerve root (sciatica)
+Passage","By a low back problem is often accompanied by additional symptoms, such as leg numbness or weakness, or foot pain, and the type of leg pain experienced may vary widely from patient to patient."
+32,586752,middle,2,0,1,0,0,same_wrong,"Anxiety, low back problem, nerve irritation, deep venous thrombosis","Passage 1: Low back problem, anxiety
+Passage 2: Irritated nerve root (sciatica)
+Passage","By a low back problem is often accompanied by additional symptoms, such as leg numbness or weakness, or foot pain, and the type of leg pain experienced may vary widely from patient to patient."
+32,586752,end,4,0,1,0,0,same_wrong,"Anxiety, Nerve irritation, Deep venous thrombosis, Low back problem","Passage 1: Low back problem, anxiety
+Passage 2: Irritated nerve root (sciatica)
+Passage","By a low back problem is often accompanied by additional symptoms, such as leg numbness or weakness, or foot pain, and the type of leg pain experienced may vary widely from patient to patient."
+33,310374,early,0,4,0,0,0,same_wrong,$11.74 (per hour),"$11.74 (per hour) or $28,000 (per year, assuming 2080 hours worked",$40K per year on average
+33,310374,middle,2,4,0,0,0,same_wrong,"Passage 1: $11.74 per hour
+Passage 2: $15,000 to $11","$11.74 (per hour) or $28,000 (per year, assuming 2080 hours worked",$40K per year on average
+33,310374,end,4,4,0,0,0,same_wrong,"$8-$15 per hour (Passage 3, Passage 5)","$11.74 (per hour) or $28,000 (per year, assuming 2080 hours worked",$40K per year on average
+34,677,early,0,0,1,0,0,same_wrong,145 kg = 22 stone and 11.67 lbs.,145 kg = 22 stone and 11.67 lbs. (Passage 1),22.8335 stone OR 22 stone and 11.67 lbs.
+34,677,middle,2,0,1,0,0,same_wrong,"145 kg = 22.08 stone, 22.08 stone and 11.04 lbs",145 kg = 22 stone and 11.67 lbs. (Passage 1),22.8335 stone OR 22 stone and 11.67 lbs.
+34,677,end,4,0,1,0,0,same_wrong,"22.8335 stone, 319 pounds",145 kg = 22 stone and 11.67 lbs. (Passage 1),22.8335 stone OR 22 stone and 11.67 lbs.
+35,620911,early,0,3,0,0,0,same_wrong,Chronic Obstructive Pulmonary Disease (COPD) is a disability.,Chronic Obstructive Pulmonary Disease (COPD),"Chronic Obstructive Pulmonary Disease and Social Security Disability COPD, or chronic obstructive pulmonary disease is a series of lung diseases that damages your lungs, blocking airflow and affecting your ability to breathe."
+35,620911,middle,2,3,0,0,0,same_wrong,Chronic Obstructive Pulmonary Disease (COPD) is a disability.,Chronic Obstructive Pulmonary Disease (COPD),"Chronic Obstructive Pulmonary Disease and Social Security Disability COPD, or chronic obstructive pulmonary disease is a series of lung diseases that damages your lungs, blocking airflow and affecting your ability to breathe."
+35,620911,end,4,3,0,0,0,same_wrong,Chronic Obstructive Pulmonary Disease (COPD),Chronic Obstructive Pulmonary Disease (COPD),"Chronic Obstructive Pulmonary Disease and Social Security Disability COPD, or chronic obstructive pulmonary disease is a series of lung diseases that damages your lungs, blocking airflow and affecting your ability to breathe."
+36,685761,early,0,3,0,0,0,same_wrong,Grantor on a deed is the transferor of interest in real property.,Grantor (on a deed) is the transferor of property.,The entity transferring its interest is called the grantor.
+36,685761,middle,2,3,0,0,0,same_wrong,Grantor (on a deed) is the transferor of interest in real property.,Grantor (on a deed) is the transferor of property.,The entity transferring its interest is called the grantor.
+36,685761,end,4,3,0,0,0,same_wrong,Grantor is the transferor of interest in real property on a deed.,Grantor (on a deed) is the transferor of property.,The entity transferring its interest is called the grantor.
+37,532464,early,0,1,0,0,1,wrong_to_right,"1304 Ne Cedar St, Roseburg, OR 97470",1304 Ne Cedar St,"It is located at the address 1304 Ne Cedar St in Roseburg, Oregon 97470."
+37,532464,middle,2,1,0,0,1,wrong_to_right,"1304 Ne Cedar St, Roseburg, OR 97470",1304 Ne Cedar St,"It is located at the address 1304 Ne Cedar St in Roseburg, Oregon 97470."
+37,532464,end,4,1,0,1,1,same_correct,1304 Ne Cedar St,1304 Ne Cedar St,"It is located at the address 1304 Ne Cedar St in Roseburg, Oregon 97470."
+38,552172,early,0,0,1,0,0,same_wrong,45 degrees (F) or lower,45 degrees (F),Below 50 degrees (F).
+38,552172,middle,2,0,1,1,0,right_to_wrong,Below 50 degrees (F),45 degrees (F),Below 50 degrees (F).
+38,552172,end,4,0,1,0,0,same_wrong,50 degrees (F) or less,45 degrees (F),Below 50 degrees (F).
+39,59039,early,0,3,0,1,1,same_correct,"1-866-343-2906 (Passage 1, 2, 3, 5)",1-866-343-2906 (Passage 4),1-866-343-2906
+39,59039,middle,2,3,0,0,1,wrong_to_right,"Passage 1, 2, 3, 5: Gmail Technical Support Phone Number
+
+Passage 4: Google Apps",1-866-343-2906 (Passage 4),1-866-343-2906
+39,59039,end,4,3,0,1,1,same_correct,"1-866-343-2906 (Passage 5)
+24x7 (Passage",1-866-343-2906 (Passage 4),1-866-343-2906
+40,1174747,early,0,4,0,1,0,right_to_wrong,Yes,"Yes, the femoral neck is part of the hip.","Yes, Subtrochanteric fractures are located between the lesser trochanter and the femoral isthmus that is, in the proximal part of the femoral shaft."
+40,1174747,middle,2,4,0,0,0,same_wrong,"Yes, the femoral neck is part of the hip.","Yes, the femoral neck is part of the hip.","Yes, Subtrochanteric fractures are located between the lesser trochanter and the femoral isthmus that is, in the proximal part of the femoral shaft."
+40,1174747,end,4,4,0,0,0,same_wrong,"Yes, the femoral neck is part of the hip.","Yes, the femoral neck is part of the hip.","Yes, Subtrochanteric fractures are located between the lesser trochanter and the femoral isthmus that is, in the proximal part of the femoral shaft."
+41,662447,early,0,3,0,1,1,same_correct,Subduction zone,Subduction zone,A subduction zone
+41,662447,middle,2,3,0,1,1,same_correct,Subduction zone,Subduction zone,A subduction zone
+41,662447,end,4,3,0,1,1,same_correct,Subduction zone,Subduction zone,A subduction zone
+42,434314,early,0,4,0,0,0,same_wrong,Not provided in the passages.,Not specified in the passages.,VanDevere Kia is celebrating America's Independence Day with great savings on new and used Kia models during our 2016 Kia Fourth of July Sale.
+42,434314,middle,2,4,0,0,0,same_wrong,"Not provided (Passage 1 mentions a sale, not actual sales figures for July)",Not specified in the passages.,VanDevere Kia is celebrating America's Independence Day with great savings on new and used Kia models during our 2016 Kia Fourth of July Sale.
+42,434314,end,4,4,0,0,0,same_wrong,Not specified in the passages.,Not specified in the passages.,VanDevere Kia is celebrating America's Independence Day with great savings on new and used Kia models during our 2016 Kia Fourth of July Sale.
+43,639741,early,0,4,0,0,0,same_wrong,Internal equity means fairness in wages or compensation within an organization.,Internal equity means wage fairness within an organization.,It is a term related to various considerations about a worker’s view of the wages he or she receives in relation to ideas or observation of what wages he or she should.
+43,639741,middle,2,4,0,0,0,same_wrong,Internal equity refers to the fairness of wages in relation to a worker's perception or comparison with others within the same organization.,Internal equity means wage fairness within an organization.,It is a term related to various considerations about a worker’s view of the wages he or she receives in relation to ideas or observation of what wages he or she should.
+43,639741,end,4,4,0,0,0,same_wrong,"Internal equity means the fairness of wages or compensation within an organization, comparing similar roles or duties.",Internal equity means wage fairness within an organization.,It is a term related to various considerations about a worker’s view of the wages he or she receives in relation to ideas or observation of what wages he or she should.
+44,503519,early,0,3,0,0,0,same_wrong,"Splined, Serrated Steering Shaft or Round Steering Shaft End Yoke",Steering yoke definition: Frame to control a vehicle's direction.,The bar that is used as a frame to pull or support something heavy.
+44,503519,middle,2,3,0,0,0,same_wrong,"Splined, Serrated Steering Shaft or Round Steering Shaft End Yoke",Steering yoke definition: Frame to control a vehicle's direction.,The bar that is used as a frame to pull or support something heavy.
+44,503519,end,4,3,0,0,0,same_wrong,"Splined, Serrated Steering Shaft or Round Steering Shaft End Yoke",Steering yoke definition: Frame to control a vehicle's direction.,The bar that is used as a frame to pull or support something heavy.
+45,51196,early,0,3,0,0,0,same_wrong,"1. Loosens thick mucus
+2. Removes irritants
+3. Relieves discomfort
+4. Helps","1. Relieves discomfort
+2. Loosens thick mucus
+3. Removes irritants
+4. Redu","Salt water gargle may loosen thick mucus and help to remove irritants like allergens, bacteria and fungi from the throat."
+45,51196,middle,2,3,0,0,0,same_wrong,"1. Relieves discomfort
+2. Loosens thick mucus
+3. Removes irritants
+4. Helps","1. Relieves discomfort
+2. Loosens thick mucus
+3. Removes irritants
+4. Redu","Salt water gargle may loosen thick mucus and help to remove irritants like allergens, bacteria and fungi from the throat."
+45,51196,end,4,3,0,0,0,same_wrong,"1. Relieves discomfort
+2. Helps with sore throat
+3. Loosens thick mucus
+4. Rem","1. Relieves discomfort
+2. Loosens thick mucus
+3. Removes irritants
+4. Redu","Salt water gargle may loosen thick mucus and help to remove irritants like allergens, bacteria and fungi from the throat."
+46,226069,early,0,2,0,0,0,same_wrong,Progression of disease,"Infections, brain damage (breathing centers)",Alzheimer's patient could progress to the point that damage from the disease to the centers of the brain that control breathing could cause death.
+46,226069,middle,2,2,0,0,0,same_wrong,"Progression of disease, infections","Infections, brain damage (breathing centers)",Alzheimer's patient could progress to the point that damage from the disease to the centers of the brain that control breathing could cause death.
+46,226069,end,4,2,0,0,0,same_wrong,"Infections, breathing center damage","Infections, brain damage (breathing centers)",Alzheimer's patient could progress to the point that damage from the disease to the centers of the brain that control breathing could cause death.
+47,151676,early,0,1,0,0,0,same_wrong,Diphtheria definition pronunciation: dih-thee-ther-ee-uh,Diphtheria definition pronunciation: dih-fther-ee-uh,An acute febrile contagious disease typically marked by the formation of a false membrane especially in the throat and caused by a gram-positive bacterium.
+47,151676,middle,2,1,0,0,0,same_wrong,Diphtheria Definition Pronunciation: dih-thee-ther-ee-uh,Diphtheria definition pronunciation: dih-fther-ee-uh,An acute febrile contagious disease typically marked by the formation of a false membrane especially in the throat and caused by a gram-positive bacterium.
+47,151676,end,4,1,0,0,0,same_wrong,Diphtheria definition pronunciation: dih-thee-ther-ee-uh,Diphtheria definition pronunciation: dih-fther-ee-uh,An acute febrile contagious disease typically marked by the formation of a false membrane especially in the throat and caused by a gram-positive bacterium.
+48,657386,early,0,2,0,1,1,same_correct,Troy-Bilt Engine,Troy-Bilt Engine,"26 inches Two-Stage Snow Thrower 208cc Troy-Bilt Engine, 30 inches Two-Stage Snow Thrower 277cc Troy-Bilt Engine, and 26 inches Two-Stage Snow Thrower 243cc Troy-Bilt Engine are on Two-Stage Snow Thrower."
+48,657386,middle,2,2,0,0,1,wrong_to_right,Troy-Bilt Engine (various models),Troy-Bilt Engine,"26 inches Two-Stage Snow Thrower 208cc Troy-Bilt Engine, 30 inches Two-Stage Snow Thrower 277cc Troy-Bilt Engine, and 26 inches Two-Stage Snow Thrower 243cc Troy-Bilt Engine are on Two-Stage Snow Thrower."
+48,657386,end,4,2,0,0,1,wrong_to_right,208cc (Passage 5),Troy-Bilt Engine,"26 inches Two-Stage Snow Thrower 208cc Troy-Bilt Engine, 30 inches Two-Stage Snow Thrower 277cc Troy-Bilt Engine, and 26 inches Two-Stage Snow Thrower 243cc Troy-Bilt Engine are on Two-Stage Snow Thrower."
+49,645589,early,0,4,0,0,0,same_wrong,"Earth's surface, landforms, climate, oceans, etc.",Earth's surface features,"Physical geography is that branch of natural science which deals with the study of processes and patterns in the natural environment like the atmosphere, hydrosphere, biosphere, and geosphere, as opposed to the cultural or built environment, the domain of human geography."
+49,645589,middle,2,4,0,0,0,same_wrong,"Earth's surface features, landforms, climate, oceans, etc.",Earth's surface features,"Physical geography is that branch of natural science which deals with the study of processes and patterns in the natural environment like the atmosphere, hydrosphere, biosphere, and geosphere, as opposed to the cultural or built environment, the domain of human geography."
+49,645589,end,4,4,0,0,0,same_wrong,"Earth's surface features, landforms, climate, oceans, etc.",Earth's surface features,"Physical geography is that branch of natural science which deals with the study of processes and patterns in the natural environment like the atmosphere, hydrosphere, biosphere, and geosphere, as opposed to the cultural or built environment, the domain of human geography."
+50,724374,early,0,1,0,0,0,same_wrong,Cebuano (also known as Bisaya),"Cebuano, Bisaya",It is one of the most widely spoken language in the Philippines especially in Visayas.
+50,724374,middle,2,1,0,0,0,same_wrong,"Cebuano, Bisaya","Cebuano, Bisaya",It is one of the most widely spoken language in the Philippines especially in Visayas.
+50,724374,end,4,1,0,1,0,right_to_wrong,Cebuano,"Cebuano, Bisaya",It is one of the most widely spoken language in the Philippines especially in Visayas.
+51,471864,early,0,2,0,0,0,same_wrong,Collectively responsible to the legislature,Collectively responsible cabinet to legislature,It is system of government means that the executive branch of government has the direct or indirect support of the parliament.
+51,471864,middle,2,2,0,0,0,same_wrong,Democratic form of government where the political party winning most seats in legislature forms the government.,Collectively responsible cabinet to legislature,It is system of government means that the executive branch of government has the direct or indirect support of the parliament.
+51,471864,end,4,2,0,0,0,same_wrong,"Collectively responsible to legislature, democratic form of government, executive branch derives democratic legitimacy from legislature, political party that wins most seats",Collectively responsible cabinet to legislature,It is system of government means that the executive branch of government has the direct or indirect support of the parliament.
+52,524802,early,0,1,0,1,1,same_correct,"Yes, includes cruise","Yes, includes cruise",Yes
+52,524802,middle,2,1,0,1,1,same_correct,"Yes, some tours include the River Thames cruise.","Yes, includes cruise",Yes
+52,524802,end,4,1,0,1,1,same_correct,"Yes, includes cruise","Yes, includes cruise",Yes
+53,520776,early,0,2,0,0,0,same_wrong,"Permanent change: 1946, 12 hours ahead of GMT
+Temporary change: 1941,",Daylight Time (NZDT) & Chatham Daylight Time (CHADT),"The time change in New Zealand was made in 1941 during the second World War, in which the clocks were advanced by half an hour, making New Zealand 12 hours ahead of Greenwich Mean Time."
+53,520776,middle,2,2,0,0,0,same_wrong,"Permanent change: 12 hours ahead of GMT
+Summer time: NZDT (13 hours ahead of UTC), CH",Daylight Time (NZDT) & Chatham Daylight Time (CHADT),"The time change in New Zealand was made in 1941 during the second World War, in which the clocks were advanced by half an hour, making New Zealand 12 hours ahead of Greenwich Mean Time."
+53,520776,end,4,2,0,0,0,same_wrong,"12 hours ahead of UTC (NZST), 12 hours 45 minutes ahead of UTC (CHAST)",Daylight Time (NZDT) & Chatham Daylight Time (CHADT),"The time change in New Zealand was made in 1941 during the second World War, in which the clocks were advanced by half an hour, making New Zealand 12 hours ahead of Greenwich Mean Time."
+54,637862,early,0,2,0,0,0,same_wrong,"1. Wheat, grapes (wine), sugar beets, milk, beef/veal, cereals, oilseeds.","Wine, wheat, sugar beets, milk, beef and veal, cereals, oilseeds.",One-third of France’s land is crop growing. Wheat is the major single crop grown at large farms in the Paris Basin and in the north.France is one of the largest wine producers in the world.
+54,637862,middle,2,2,0,0,0,same_wrong,"Wine, grapes, wheat, milk, beef, veal, cereals, oilseeds.","Wine, wheat, sugar beets, milk, beef and veal, cereals, oilseeds.",One-third of France’s land is crop growing. Wheat is the major single crop grown at large farms in the Paris Basin and in the north.France is one of the largest wine producers in the world.
+54,637862,end,4,2,0,0,0,same_wrong,"Wine, wheat, grapes, meat, dairy, sugar beets, oilseeds, cereals, and milk.","Wine, wheat, sugar beets, milk, beef and veal, cereals, oilseeds.",One-third of France’s land is crop growing. Wheat is the major single crop grown at large farms in the Paris Basin and in the north.France is one of the largest wine producers in the world.
+55,1174742,early,0,4,0,0,0,same_wrong,Strips of cloth for protecting or supporting a wounded body part,bandage: a long strip of cloth tied around a wounded part of someone's body to protect or support it.,A bandage is a long strip of cloth that is tied around a wounded part of someone's body in order to protect or support it.
+55,1174742,middle,2,4,0,0,0,same_wrong,bandage: a long strip of cloth tied around a wounded part of someone's body to protect or support it.,bandage: a long strip of cloth tied around a wounded part of someone's body to protect or support it.,A bandage is a long strip of cloth that is tied around a wounded part of someone's body in order to protect or support it.
+55,1174742,end,4,4,0,0,0,same_wrong,Strip of cloth for protecting or supporting a wounded part of body,bandage: a long strip of cloth tied around a wounded part of someone's body to protect or support it.,A bandage is a long strip of cloth that is tied around a wounded part of someone's body in order to protect or support it.
+56,532076,early,0,2,0,0,0,same_wrong,Underwriting expenses: Costs and expenditures associated with underwriting activity.,Underwriting expenses: Costs and expenditures associated with underwriting activity.,It is the costs that an insurance company must pay to remain in operation.
+56,532076,middle,2,2,0,0,0,same_wrong,Costs associated with underwriting activity,Underwriting expenses: Costs and expenditures associated with underwriting activity.,It is the costs that an insurance company must pay to remain in operation.
+56,532076,end,4,2,0,0,0,same_wrong,Costs and expenditures associated with underwriting activity.,Underwriting expenses: Costs and expenditures associated with underwriting activity.,It is the costs that an insurance company must pay to remain in operation.
+57,547021,early,0,4,0,0,0,same_wrong,Property taking without consent,Permanent taking of personal property without permission,Theft is the illegal taking of another person's property or services without that person's permission or consent with the intent to deprive the rightful owner of it.
+57,547021,middle,2,4,0,0,0,same_wrong,Unlawful taking of property,Permanent taking of personal property without permission,Theft is the illegal taking of another person's property or services without that person's permission or consent with the intent to deprive the rightful owner of it.
+57,547021,end,4,4,0,0,0,same_wrong,Permanently deprive of property,Permanent taking of personal property without permission,Theft is the illegal taking of another person's property or services without that person's permission or consent with the intent to deprive the rightful owner of it.
+58,612660,early,0,2,0,1,1,same_correct,Fairfield,Fairfield,"Shelton is in Fairfield County, Connecticut, United States."
+58,612660,middle,2,2,0,1,1,same_correct,Fairfield,Fairfield,"Shelton is in Fairfield County, Connecticut, United States."
+58,612660,end,4,2,0,1,1,same_correct,Fairfield,Fairfield,"Shelton is in Fairfield County, Connecticut, United States."
+59,1185854,early,0,0,1,0,1,wrong_to_right,"Secure borders, set up satellite countries",To set up satellite countries,The reasons why Stalin wanted to control Eastern Europe are Russia has historically no secure border and they wanted to set up satellite countries.
+59,1185854,middle,2,0,1,0,1,wrong_to_right,"1. Secure borders
+2. Set up satellite countries",To set up satellite countries,The reasons why Stalin wanted to control Eastern Europe are Russia has historically no secure border and they wanted to set up satellite countries.
+59,1185854,end,4,0,1,0,1,wrong_to_right,"1, 2. (Russia has historically no secure border, They wanted to set up satellite countries)",To set up satellite countries,The reasons why Stalin wanted to control Eastern Europe are Russia has historically no secure border and they wanted to set up satellite countries.

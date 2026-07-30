@@ -1,0 +1,92 @@
+{
+  "manifest_version": "1.0",
+  "generated": "2026-07-28",
+  "source_commit": "4a95306",
+  "repository": "https://github.com/nitroxido/token-importance-scoring",
+
+  "checkpoints": {
+    "tis-v8b-hard-anchor": {
+      "huggingface_repo": "oldman-dev/tis-v8b-hard-anchor",
+      "file": "tis_components.pt",
+      "sha256": "779d2362e16d52f98148b3653d3185a09e7c5eacd01d0ead89b6fea2e06917d5",
+      "architecture": "ImportanceUpdateHead (cross-attention 4-head + RMSNorm + linear projection)",
+      "base_model": "mistralai/Mistral-7B-v0.3",
+      "parameters_M": 8,
+      "training": {
+        "objective": "ERT — KL(logits_full || logits_evicted) + ranking + stability",
+        "loss_weights": {"ranking": 1.0, "retrieval": 2.0, "stability": 0.5},
+        "steps": 2000,
+        "lr": 0.001,
+        "grad_accum": 4,
+        "budgets": [0.25, 0.5, 0.75],
+        "training_data": "MS-MARCO train split",
+        "anchor_force_value": 1.0
+      },
+      "eval_results": {
+        "niah_hard_n50": {
+          "budget_0.25": {"accuracy": 82.0, "evidence_survival": 100.0},
+          "budget_0.50": {"accuracy": 68.0, "evidence_survival": 100.0},
+          "budget_0.75": {"accuracy": 44.0, "evidence_survival": 100.0}
+        },
+        "litm_msmarco_n60_seed42": {
+          "em_early": 0.217,
+          "em_middle": 0.217,
+          "em_end": 0.217,
+          "litm_gap": 0.000,
+          "baseline_em_overall": 0.167,
+          "result_file": "results/litm_with_baselines_summary.csv",
+          "metadata_file": "results/litm_with_baselines_metadata.json"
+        }
+      }
+    },
+    "tis-stage3-ert": {
+      "huggingface_repo": "oldman-dev/tis-stage3-ert",
+      "architecture": "ImportanceUpdateHead (cross-attention 4-head + RMSNorm + linear projection)",
+      "base_model": "mistralai/Mistral-7B-v0.3",
+      "parameters_M": 8,
+      "training": {
+        "objective": "ERT closed-loop (KL divergence)",
+        "steps": 2000,
+        "training_data": "Synthetic long-context (NIAH-style)"
+      },
+      "eval_results": {
+        "niah_hard_n50": {
+          "budget_0.25": {"accuracy": 78.0, "evidence_survival": 100.0},
+          "budget_0.50": {"accuracy": 74.0, "evidence_survival": 100.0}
+        },
+        "litm_transfer_test": {
+          "litm_gap": 0.000,
+          "em_all_positions": 0.217,
+          "note": "Zero-shot transfer — no LITM-specific training"
+        }
+      }
+    },
+    "tis-passage-reranker": {
+      "huggingface_repo": "oldman-dev/tis-passage-reranker",
+      "architecture": "QueryAwareImportanceHead (cross-attention query conditioning)",
+      "base_model": "mistralai/Mistral-7B-v0.3",
+      "parameters_M": 8,
+      "training": {
+        "objective": "InfoNCE contrastive on MS-MARCO passage pairs",
+        "training_data": "MS-MARCO passage QA"
+      },
+      "eval_results": {
+        "litm_msmarco_n60_seed42": {
+          "litm_gap": 0.000,
+          "em_all_positions": 0.217
+        }
+      }
+    }
+  },
+
+  "environment": {
+    "python": "3.11",
+    "torch": "2.1.2",
+    "transformers": "4.36.0",
+    "bitsandbytes": "0.41.3",
+    "attn_implementation": "eager",
+    "hardware": "NVIDIA RTX 5070 (8 GB VRAM)"
+  },
+
+  "reproduction_command": "python scripts/run_litm_with_baselines.py --checkpoint checkpoints/tis-v8b-hard-anchor --n-examples 60 --seed 42"
+}

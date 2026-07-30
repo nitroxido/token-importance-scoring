@@ -243,10 +243,12 @@ Key-value retrieval across long contexts (Liu et al., 2023 protocol).
 
 ## Reproducibility
 
-Each checkpoint ships with `eval_manifest.json` containing the SHA256 hash,
-source commit, environment versions, and exact evaluation command.
+The `results/` directory contains pre-computed evaluation artifacts for all
+published checkpoints, including per-example predictions and ranking metrics.
+`results/eval_manifest.json` records SHA256 hashes, source commit, environment
+versions, and exact evaluation commands for full traceability.
 
-Generate a manifest for any checkpoint:
+Generate a manifest for any new checkpoint:
 
 ```bash
 python scripts/generate_eval_manifest.py \
@@ -254,12 +256,10 @@ python scripts/generate_eval_manifest.py \
     --eval-script scripts/eval_niah_hard.py
 ```
 
-Run the compatibility test suite:
+Run the API compatibility test suite (no GPU required):
 
 ```bash
-pytest tests/test_compatibility.py -v      # API compatibility, no GPU needed
-pytest tests/test_regression_reference.py  # Accuracy regression, GPU required
-    --checkpoint checkpoints/closed_loop_v6
+pytest tests/test_compatibility.py -v
 ```
 
 ## Citation

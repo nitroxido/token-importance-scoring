@@ -1,0 +1,28 @@
+{
+  "experiment_id": "litm_paired_position_sweep",
+  "date": "2026-07-28T09:06:23.686353",
+  "purpose": "Paired sweep to isolate pure position effect (same passage sets tested at 3 positions)",
+  "model_details": {
+    "base_model": "unsloth/mistral-7b-instruct-v0.3-bnb-4bit",
+    "quantization": "4-bit NF4"
+  },
+  "scorer_details": {
+    "huggingface_repo": "oldman-dev/tis-v8b-hard-anchor",
+    "scorer_type": "query_trained_head",
+    "source_commit": "4a95306"
+  },
+  "dataset": {
+    "source": "MS-MARCO passage QA (train split)",
+    "num_examples": 60,
+    "num_positions": 3,
+    "examples_are_paired": true,
+    "position_isolation": "Same passage sets tested at 3 positions — removes difficulty confound",
+    "passages_per_context": 5,
+    "seed": 42
+  },
+  "command_used": "python scripts/run_litm_paired_sweep.py --n-examples 60 --seed 42",
+  "result_files": [
+    "results/litm_paired_summary.csv"
+  ],
+  "note": "Paired sweep confirms independent-eval result: TIS gap remains 0.000 under controlled position isolation"
+}

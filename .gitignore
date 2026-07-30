@@ -126,7 +126,7 @@ datasets/
 # ============================================================================
 # Results & Outputs (Generated during evaluation)
 # ============================================================================
-results/
+# results/ is tracked — contains reproducibility artifacts (CSVs, metadata JSONs)
 outputs/
 runs/
 wandb/

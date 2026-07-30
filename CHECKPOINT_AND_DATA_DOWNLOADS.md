@@ -4,15 +4,22 @@ This package includes code and documentation but excludes large checkpoint and d
 
 ## Option 1: Download Pre-trained Checkpoints from HuggingFace Hub
 
-**Stage 3 ERT Learned (Recommended for Quick Start):**
+**Stage 3 ERT Learned (KV compression + zero-shot LITM transfer):**
 ```bash
-huggingface-cli download your-org/tis-stage3-ert --local-dir checkpoints/stage3_ert_learned
+huggingface-cli download oldman-dev/tis-stage3-ert --local-dir checkpoints/stage3_ert
 ```
 
-**V8b Hard-Anchor Tuned (Publication Results):**
+**V8b Hard-Anchor (Publication Results — LITM + NIAH):**
 ```bash
-huggingface-cli download your-org/tis-v8b-hard-anchor --local-dir checkpoints/v8b_hard_anchor
+huggingface-cli download oldman-dev/tis-v8b-hard-anchor --local-dir checkpoints/v8b_hard_anchor
 ```
+
+**Passage Reranker (TIS 2.0 — dedicated LITM head):**
+```bash
+huggingface-cli download oldman-dev/tis-passage-reranker --local-dir checkpoints/passage_reranker
+```
+
+All checkpoints: https://huggingface.co/oldman-dev
 
 ## Option 2: Regenerate Data Locally
 
