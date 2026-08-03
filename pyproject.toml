@@ -13,6 +13,9 @@ dependencies = [
     "datasets",
     "numpy",
     "pytest",
+    "rank_bm25",
+    "matplotlib",
+    "scikit-learn",
 ]
 
 [project.optional-dependencies]

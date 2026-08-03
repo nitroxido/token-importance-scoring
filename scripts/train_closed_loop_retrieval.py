@@ -13,7 +13,7 @@ must learn discriminative scoring from context alone.
 Usage (with venv):
     source .venv/bin/activate
     python scripts/train_closed_loop_retrieval.py \
-        --base-checkpoint checkpoints/stage3_ert_local_fresh/ \
+        --base-checkpoint checkpoints/stage3_ert/ \
         --output-dir checkpoints/closed_loop_retrieval/ \
         --steps 2000 \
         --device cuda

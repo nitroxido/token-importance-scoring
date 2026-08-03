@@ -21,7 +21,7 @@ Configuration (proven RTX 5070 fit):
 
 Usage:
     python scripts/retrain_rmsnorm_ert_style.py \
-        --base-checkpoint checkpoints/stage3_ert_local_fresh/ \
+        --base-checkpoint checkpoints/stage3_ert/ \
         --output-dir checkpoints/stage3_ert_rmsnorm_retrained/ \
         --steps 2000
 """

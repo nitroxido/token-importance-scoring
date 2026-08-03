@@ -2,7 +2,7 @@
 """
 scripts/test_kv_eviction_head_on_litm.py
 
-Test whether the KV-eviction trained head (stage3_ert_local_fresh) can transfer
+Test whether the KV-eviction trained head (stage3_ert) can transfer
 to the passage reordering task without retraining.
 
 This answers the research question:
@@ -38,8 +38,8 @@ if _ROOT not in sys.path:
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 BASE_MODEL = "unsloth/mistral-7b-instruct-v0.3-bnb-4bit"
-KV_CHECKPOINT = os.path.join(_ROOT, "checkpoints", "stage3_ert_local_fresh")
-PASSAGE_CHECKPOINT = os.path.join(_ROOT, "checkpoints", "v8_hard_anchor_final")
+_DEFAULT_KV_CHECKPOINT = os.path.join(_ROOT, "checkpoints", "stage3_ert")
+_DEFAULT_PASSAGE_CHECKPOINT = os.path.join(_ROOT, "checkpoints", "v8b_hard_anchor")
 DATA_PATH = os.path.join(_ROOT, "data", "msmarco_quick", "train")
 RESULTS_DIR = os.path.join(_ROOT, "results")
 D_MODEL = 4096
@@ -47,6 +47,10 @@ D_MODEL = 4096
 
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Test KV-eviction head on LITM passage reordering")
+    p.add_argument("--checkpoint-kv", default=_DEFAULT_KV_CHECKPOINT,
+                   help="KV-eviction checkpoint dir (default: checkpoints/stage3_ert)")
+    p.add_argument("--checkpoint-passage", default=_DEFAULT_PASSAGE_CHECKPOINT,
+                   help="Passage-head checkpoint dir (default: checkpoints/v8b_hard_anchor)")
     p.add_argument("--n-examples", type=int, default=60,
                    help="Number of base MS-MARCO examples (×3 positions)")
     p.add_argument("--k-passages", type=int, default=5,
@@ -250,8 +254,8 @@ def run_evaluation(args, examples, model, tokenizer, kv_head, passage_head):
     
     pipelines = [
         ("baseline", "Original order", None),
-        ("kv_eviction_head", "KV-eviction head (stage3_ert_local_fresh)", kv_head),
-        ("passage_head", "Passage reordering head (v8_hard_anchor_final)", passage_head),
+        ("kv_eviction_head", "KV-eviction head (stage3_ert)", kv_head),
+        ("passage_head", "Passage reordering head (v8b_hard_anchor)", passage_head),
     ]
     
     print(f"\n{'='*70}\nTesting KV-eviction head transfer to passage reordering\n{'='*70}\n", flush=True)
@@ -430,8 +434,8 @@ def main():
     
     # Load
     model, tokenizer = load_model_and_tokenizer(args.device)
-    kv_head = load_tis_head(KV_CHECKPOINT, args.device, "KV-eviction")
-    passage_head = load_tis_head(PASSAGE_CHECKPOINT, args.device, "Passage reordering")
+    kv_head = load_tis_head(args.checkpoint_kv, args.device, "KV-eviction")
+    passage_head = load_tis_head(args.checkpoint_passage, args.device, "Passage reordering")
     examples = load_msmarco_examples(args.n_examples, args.k_passages)
     
     # Metadata
@@ -445,13 +449,13 @@ def main():
         },
         "head_comparison": {
             "kv_eviction_head": {
-                "checkpoint": KV_CHECKPOINT,
+                "checkpoint": args.checkpoint_kv,
                 "training_objective": "ERT (KL divergence for token-level KV-cache compression)",
-                "training_data": "Unknown (from stage3_ert_local_fresh)",
+                "training_data": "Unknown (from stage3_ert)",
                 "intended_use": "Identifying which tokens to evict from KV cache"
             },
             "passage_reordering_head": {
-                "checkpoint": PASSAGE_CHECKPOINT,
+                "checkpoint": args.checkpoint_passage,
                 "training_objective": "ERT (KL divergence optimized for passage reordering)",
                 "training_data": "MS-MARCO passage QA",
                 "intended_use": "Reordering passages to eliminate position bias"

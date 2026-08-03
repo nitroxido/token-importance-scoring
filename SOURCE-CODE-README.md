@@ -35,7 +35,12 @@ scripts/
 ├── train_closed_loop_retrieval.py  # Phase 3: closed-loop retrieval TIS training
 ├── train_drafter_tis_aware.py      # Phase 5: TIS-aware drafter training
 ├── run_self_spec_decoding_tis.py   # Phase 5: real speculative decoding evaluation
-├── generate_eval_manifest.py       # Reproducibility manifest generator
+├── run_litm_with_baselines.py      # TIS 2.0: 4-pipeline LITM evaluation (baseline, lexical, TIS, oracle)
+├── run_litm_paired_sweep.py        # TIS 2.0: paired position sweep (controls difficulty variance)
+├── test_kv_eviction_head_on_litm.py # TIS 2.0: zero-shot transfer test (KV-eviction → passage reordering)
+├── validate_score_direction.py     # TIS 2.0: ascending vs descending, mean vs top10% across checkpoints
+├── test_query_specificity.py       # TIS 2.0: correct vs wrong-query MRR (query-relevance calibration test)
+└── generate_eval_manifest.py       # Reproducibility manifest generator
 
 tests/
 ├── test_compatibility.py           # API compatibility suite (13 tests, no GPU)

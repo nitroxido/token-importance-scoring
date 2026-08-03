@@ -19,6 +19,8 @@ Consumer GPU compatible (validated on RTX 5070, 8 GB VRAM).
 
 ## Speculative Decoding Results
 
+(n=30, lambda_d=0.2, seed=42)
+
 | Condition | Accept Length | Speedup | Attn Drift @k=7 |
 |---|---|---|---|
 | No TIS | 5.80 / 8 | 0.644 | −10.0% |
@@ -26,9 +28,13 @@ Consumer GPU compatible (validated on RTX 5070, 8 GB VRAM).
 
 TIS improves drafter accuracy (+12.5% acceptance length). Real attention drift is approximately equal in both conditions (~−10%); TIS's benefit is prediction quality, not drift prevention.
 
+An additional internal run at n=100 with lambda_d=0.0 confirmed baseline behavior (both conditions at 6.27/8 when no bias is applied), validating that the improvement is driven by the learned bias, not sampling variance.
+
 ## Position Bias Elimination (TIS 2.0)
 
-TIS can score entire passage relevance (not just individual tokens), enabling query-aware reordering of retrieved passages before generation. This completely eliminates the Lost-in-the-Middle position bias documented in Liu et al. (2023).
+TIS scores token importance over final-layer hidden states and aggregates per-passage (arithmetic mean, descending). This eliminates the Lost-in-the-Middle position bias documented in Liu et al. (2023) without requiring query-specific retraining.
+
+**Scoring contract**: each passage is encoded independently; the scorer's `direct_score()` path does not use query context. Score direction has been validated: descending (high-first) outperforms ascending for EM on both Stage3 and v8b checkpoints (`results/score_direction_validation_summary.csv`).
 
 **Passage reordering results** (MS-MARCO, 60 queries × 3 positions = 180 test cases, seed=42):
 
@@ -44,9 +50,9 @@ Per-example predictions: [`results/litm_per_example_breakdown.csv`](results/litm
 
 **Methodological notes:**
 
-- **Ranking quality ≠ answer quality**: TIS achieves lower Recall@1 (21.7%) than lexical TF-IDF (35.0%), but higher EM (21.7% vs 17.8%). TIS optimizes for answer extraction, not gold-passage-first ordering.
-- **Oracle paradox**: TIS EM (21.7%) exceeds oracle EM (18.3%), indicating that TIS's full-context reordering improves context coherence beyond simply placing the gold passage first.
-- **Answer extraction is the bottleneck**: 76.1% of cases remain wrong under both baseline and TIS. 7.2% transition wrong→right (TIS recoveries) vs 2.2% right→wrong (TIS degradations). Net recovery ratio: 3.25:1.
+- **Ranking quality ≠ answer quality**: TIS achieves lower Recall@1 (21.7%) than lexical TF-IDF (35.0%), but higher EM (21.7% vs 17.8%). Passage-ranking metrics (MRR, R@1) do not predict generation quality at this scale.
+- **Oracle paradox**: TIS EM (21.7%) exceeds oracle EM (18.3%), indicating that TIS’s full-context layout provides a more generator-friendly arrangement than simply placing the gold passage first.
+- **Answer extraction is the bottleneck**: 76.1% of cases remain wrong under both baseline and TIS. 7.2% transition wrong→right vs 2.2% right→wrong. Net recovery ratio: 3.25:1.
 - **EM definition**: Extended EM (lenient substring match). Exact definition in [`results/litm_with_baselines_metadata.json`](results/litm_with_baselines_metadata.json).
 
 **Methodological validation — paired position sweep:**
@@ -60,7 +66,11 @@ A paired evaluation (same passage sets at all 3 positions, removes difficulty va
 
 Paired results: [`results/litm_paired_summary.csv`](results/litm_paired_summary.csv)
 
-**Transfer finding**: The existing `tis-stage3-ert` checkpoint (trained for KV cache compression) achieves identical passage reordering performance without retraining. TIS learns generalizable importance patterns applicable across tasks.
+**Transfer finding**: The `tis-stage3-ert` checkpoint (trained for KV cache compression) achieves identical passage reordering performance without retraining (`results/kv_transfer_test_summary.csv`). Both checkpoints learn a generalizable context-utility signal applicable across tasks.
+
+**Score direction and query-specificity validation** (n=60, seed=42):
+- Score direction: descending (high-first) outperforms ascending for EM on both Stage3 and v8b (`results/score_direction_validation_summary.csv`)
+- Query conditioning: passage orders change in 71.7% of cases when the query changes, but correct-query advantage over a lexically-near wrong query is not statistically significant (MRR delta=−0.006, 95% CI [−0.051, +0.041]) (`results/query_specificity_summary.csv`)
 
 ```bash
 # Reproduce published LITM results — 4-pipeline comparison (n=60, seed=42)

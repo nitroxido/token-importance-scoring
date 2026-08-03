@@ -1,0 +1,7 @@
+checkpoint,aggregation,direction,sigmoid,config_desc,n,recall_at_1,mrr,avg_gold_rank,em,f1
+stage3,mean,ascending,False,"Stage3 (low→high, mean raw)",60,0.13333333333333333,0.3813888888888889,2.4,0.05,0.1687517215774364
+stage3,top10,ascending,True,"Stage3 (low→high, top10% sigmoid)",60,1.0,1.0,0.0,0.05,0.14766885333536608
+stage3,mean,descending,False,"Stage3 (high→low, mean raw)",60,0.23333333333333334,0.5113888888888888,1.6,0.06666666666666667,0.1548237463409979
+stage3,top10,descending,True,"Stage3 (high→low, top10% sigmoid)",60,1.0,1.0,0.0,0.05,0.14766885333536608
+v8b,mean,ascending,False,"v8b (low→high, mean raw)",60,0.18333333333333332,0.4305555555555555,2.1666666666666665,0.05,0.1584587648328456
+v8b,mean,descending,False,"v8b (high→low, mean raw)",60,0.16666666666666666,0.46722222222222226,1.8333333333333333,0.06666666666666667,0.15385921914570108

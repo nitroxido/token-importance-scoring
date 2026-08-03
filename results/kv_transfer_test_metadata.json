@@ -1,0 +1,31 @@
+{
+  "experiment_id": "kv_eviction_transfer_test",
+  "date": "2026-07-28T10:04:00.665561",
+  "research_question": "Can a head trained for token-level KV-cache eviction transfer to passage reordering?",
+  "model_details": {
+    "base_model": "unsloth/mistral-7b-instruct-v0.3-bnb-4bit",
+    "quantization": "4-bit NF4"
+  },
+  "head_comparison": {
+    "kv_eviction_head": {
+      "checkpoint": "/mnt/juegos/proyectos/especiales/token-importance/checkpoints/stage3_ert_local_fresh",
+      "training_objective": "ERT (KL divergence for token-level KV-cache compression)",
+      "training_data": "Unknown (from stage3_ert_local_fresh)",
+      "intended_use": "Identifying which tokens to evict from KV cache"
+    },
+    "passage_reordering_head": {
+      "checkpoint": "/mnt/juegos/proyectos/especiales/token-importance/checkpoints/v8_hard_anchor_final",
+      "training_objective": "ERT (KL divergence optimized for passage reordering)",
+      "training_data": "MS-MARCO passage QA",
+      "intended_use": "Reordering passages to eliminate position bias"
+    }
+  },
+  "dataset": {
+    "source": "MS-MARCO passage QA (train split)",
+    "num_examples": 60,
+    "num_positions": 3,
+    "passages_per_context": 5,
+    "seed": 42
+  },
+  "command_used": "scripts/test_kv_eviction_head_on_litm.py --n-examples 60 --seed 42"
+}

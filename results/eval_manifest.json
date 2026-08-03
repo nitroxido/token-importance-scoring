@@ -1,8 +1,36 @@
 {
   "manifest_version": "1.0",
-  "generated": "2026-07-28",
+  "generated": "2026-08-01",
   "source_commit": "4a95306",
   "repository": "https://github.com/nitroxido/token-importance-scoring",
+
+  "additional_validation": {
+    "kv_eviction_transfer_test": {
+      "description": "Zero-shot transfer: head trained for KV-cache compression applied to passage reordering",
+      "result_file": "results/kv_transfer_test_summary.csv",
+      "metadata_file": "results/kv_transfer_test_metadata.json",
+      "finding": "KV-eviction head and passage head achieve identical LITM results (EM=21.7%, gap=0.000)"
+    },
+    "score_direction_validation": {
+      "description": "Ascending vs descending, mean-raw vs top10-sigmoid across Stage3 and v8b checkpoints",
+      "result_file": "results/score_direction_validation_summary.csv",
+      "finding": "Descending (high-first) is better for EM in both checkpoints; top-10% sigmoid produces degenerate rankings"
+    },
+    "query_specificity_test": {
+      "description": "Correct vs lexically-near wrong query: does the checkpoint learn query-relevant passage ordering?",
+      "result_file": "results/query_specificity_summary.csv",
+      "finding": "Query-conditioning confirmed (71.7% order change rate) but correct-query MRR advantage not statistically demonstrated (delta=-0.006, 95% CI [-0.051,+0.041])"
+    }
+  },
+
+  "scoring_contract": {
+    "aggregation": "arithmetic mean of all token scores per passage",
+    "score_source": "ImportanceUpdateHead.direct_score(hidden) — raw logits (no sigmoid)",
+    "direction": "descending (high-first) — validated by score_direction_validation_summary.csv",
+    "passage_encoding": "each passage encoded independently (no query context in scoring call)",
+    "normalization": "none",
+    "query_relevance_status": "context-utility signal confirmed; calibrated query-relevance NOT demonstrated (see query_specificity_summary.csv, MRR delta=-0.006, 95% CI [-0.051, +0.041])"
+  },
 
   "checkpoints": {
     "tis-v8b-hard-anchor": {
@@ -63,17 +91,19 @@
     },
     "tis-passage-reranker": {
       "huggingface_repo": "oldman-dev/tis-passage-reranker",
-      "architecture": "QueryAwareImportanceHead (cross-attention query conditioning)",
+      "architecture": "ImportanceUpdateHead (cross-attention 4-head + RMSNorm + linear projection)",
       "base_model": "mistralai/Mistral-7B-v0.3",
       "parameters_M": 8,
       "training": {
-        "objective": "InfoNCE contrastive on MS-MARCO passage pairs",
-        "training_data": "MS-MARCO passage QA"
+        "objective": "ERT — KL(logits_full || logits_evicted) + ranking + stability",
+        "training_data": "MS-MARCO train split",
+        "note": "Same training objective as tis-v8b-hard-anchor; dedicated HF release of the passage-reordering variant"
       },
       "eval_results": {
         "litm_msmarco_n60_seed42": {
           "litm_gap": 0.000,
-          "em_all_positions": 0.217
+          "em_all_positions": 0.217,
+          "result_file": "results/litm_with_baselines_summary.csv"
         }
       }
     }
