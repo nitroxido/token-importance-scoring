@@ -58,6 +58,11 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--device", default="")
     p.add_argument("--max-new-tokens", type=int, default=30)
+    # Informational: direct_score() always returns scaled_0_100; this arg documents it
+    p.add_argument("--score-space", default="scaled_0_100",
+                   choices=["scaled_0_100"],
+                   help="Score space from direct_score(): sigmoid(raw)*100 → [0,100]. "
+                        "Only scaled_0_100 is supported; provided for documentation.")
     return p.parse_args()
 
 
@@ -125,20 +130,35 @@ def load_msmarco_examples(n: int, seed: int):
     indices = np.random.choice(len(ds), size=min(n, len(ds)), replace=False)
     
     examples = []
+    skipped_no_positive = 0
     for idx in indices:
         item = ds[int(idx)]
-        passages = item["passages"]["passage_text"][:5]
-        if len(passages) < 5:
+        passages_data = item["passages"]
+        texts = passages_data["passage_text"][:5]
+        is_selected = passages_data.get("is_selected", [0] * len(texts))[:5]
+
+        if len(texts) < 2:
             continue
-        
+
+        # Use official is_selected label; skip if no positive in first-5 truncation
+        gold_indices = [i for i, sel in enumerate(is_selected) if sel == 1]
+        if not gold_indices:
+            skipped_no_positive += 1
+            continue
+
+        gold_idx = gold_indices[0]
+
         examples.append({
             "query_id": item["query_id"],
             "question": item["query"],
-            "passages": passages,
-            "gold_passage": passages[0],  # Assume first passage is gold
+            "passages": texts,
+            "gold_passage": texts[gold_idx],
+            "gold_position": gold_idx,  # actual position per is_selected
             "answers": get_answers(item),
         })
-    
+
+    if skipped_no_positive:
+        print(f"[data] Skipped {skipped_no_positive} examples with no selected passage in first-5 truncation", flush=True)
     print(f"[data] Loaded {len(examples)} examples", flush=True)
     return examples
 
@@ -181,41 +201,41 @@ def aggregate_passage_score(token_scores: np.ndarray, method: str) -> float:
 
 def reorder_by_tis(
     passages: list[str],
-    model, 
+    model,
     tokenizer,
     tis_head,
     aggregation: str = "mean",
     direction: str = "descending",
-    use_sigmoid: bool = False,
 ) -> tuple[list[str], list[int], list[float]]:
     """
-    TIS-based passage reordering with configurable aggregation and direction.
-    
+    TIS-based passage reordering.
+
+    Note: direct_score() returns sigmoid(raw)*100 (values in [0, 100]).
+    No further sigmoid is applied here — a second sigmoid on [0,100] inputs
+    would compress all values near 1.0 and produce near-random tie-breaking.
+
     Args:
         passages: List of passage texts
         model, tokenizer, tis_head: Model components
         aggregation: 'mean', 'top10', 'top20', 'length_norm'
         direction: 'descending' (high first) or 'ascending' (low first)
-        use_sigmoid: Apply sigmoid before aggregation
-    
+
     Returns:
         ordered_passages, ranked_indices, passage_scores
     """
     passage_scores = []
     for passage in passages:
         token_scores = score_tokens(model, tokenizer, tis_head, passage)
-        if use_sigmoid:
-            token_scores = 1 / (1 + np.exp(-token_scores))
         score = aggregate_passage_score(token_scores, aggregation)
         passage_scores.append(score)
-    
+
     if direction == "descending":
         ranked_indices = np.argsort(-np.array(passage_scores))
     elif direction == "ascending":
         ranked_indices = np.argsort(np.array(passage_scores))
     else:
         raise ValueError(f"Unknown direction: {direction}")
-    
+
     ordered_passages = [passages[i] for i in ranked_indices]
     return ordered_passages, list(ranked_indices), passage_scores
 
@@ -287,61 +307,62 @@ def run_evaluation(args, examples, model, tokenizer, heads):
     results = []
     
     configs = [
-        # Original method (what we published)
-        ("stage3", "mean", "descending", False, "Stage3 (high→low, mean raw)"),
-        ("stage3", "mean", "ascending", False, "Stage3 (low→high, mean raw)"),
-        ("v8b", "mean", "descending", False, "v8b (high→low, mean raw)"),
-        ("v8b", "mean", "ascending", False, "v8b (low→high, mean raw)"),
-        
-        # Independent replication method
-        ("stage3", "top10", "descending", True, "Stage3 (high→low, top10% sigmoid)"),
-        ("stage3", "top10", "ascending", True, "Stage3 (low→high, top10% sigmoid)"),
+        # (checkpoint, aggregation, direction, display_label)
+        # score space is always scaled_0_100 (sigmoid(raw)*100 from direct_score())
+        ("stage3", "mean",  "descending", "Stage3 (high→low, mean)"),
+        ("stage3", "mean",  "ascending",  "Stage3 (low→high, mean)"),
+        ("v8b",    "mean",  "descending", "v8b (high→low, mean)"),
+        ("v8b",    "mean",  "ascending",  "v8b (low→high, mean)"),
+        ("stage3", "top10", "descending", "Stage3 (high→low, top10%)"),
+        ("stage3", "top10", "ascending",  "Stage3 (low→high, top10%)"),
     ]
     
     print(f"\n{'='*70}")
     print(f"Score Direction Validation: {len(examples)} examples × {len(configs)} configs")
     print(f"{'='*70}\n", flush=True)
     
-    for ckpt, agg, direction, sigmoid, desc in configs:
+    for ckpt, agg, direction, desc in configs:
         print(f"[{ckpt}] {desc}...", flush=True)
         t_start = time.perf_counter()
-        
+
         head = heads[ckpt]
-        
+
         for ex in examples:
             passages = ex["passages"]
             question = ex["question"]
             answers = ex["answers"]
-            
+            gold_position = ex["gold_position"]  # from is_selected, not hardcoded 0
+
             # Reorder passages
             ordered_passages, ranked_indices, scores = reorder_by_tis(
-                passages, model, tokenizer, head, 
-                aggregation=agg, direction=direction, use_sigmoid=sigmoid
+                passages, model, tokenizer, head,
+                aggregation=agg, direction=direction
             )
-            
-            # Ranking metrics
-            rank_metrics = compute_ranking_metrics(ranked_indices, gold_position=0)
-            
+
+            # Ranking metrics (gold identified by is_selected)
+            rank_metrics = compute_ranking_metrics(ranked_indices, gold_position=gold_position)
+
             # Generate answer
             prompt = build_prompt(ordered_passages, question)
             pred = generate_answer(model, tokenizer, prompt, args.max_new_tokens)
-            
+
             # Generation metrics
             em = exact_match(pred, answers)
             f1 = max([token_f1(pred, a) for a in answers]) if answers else 0.0
-            
+
             results.append({
                 "checkpoint": ckpt,
                 "aggregation": agg,
                 "direction": direction,
-                "sigmoid": bool(sigmoid),
+                "score_space": "scaled_0_100",  # direct_score() returns sigmoid(raw)*100
                 "config_desc": desc,
                 "query_id": ex["query_id"],
                 "question": question,
-                # Ranking metrics
+                # Ranking metrics (gold from is_selected)
                 "recall_at_1": int(rank_metrics["recall_at_1"]),
                 "mrr": float(rank_metrics["mrr"]),
                 "gold_rank": int(rank_metrics["gold_rank"]),
+                "original_gold_position": gold_position,
                 # Generation metrics
                 "em": int(em),
                 "f1": float(f1),
@@ -351,10 +372,10 @@ def run_evaluation(args, examples, model, tokenizer, heads):
                 "passage_scores": [float(s) for s in scores],
                 "ranked_indices": [int(i) for i in ranked_indices],
             })
-        
+
         elapsed = time.perf_counter() - t_start
         print(f"[{ckpt}] Done in {elapsed:.1f}s\n", flush=True)
-    
+
     return results
 
 
@@ -362,23 +383,23 @@ def run_evaluation(args, examples, model, tokenizer, heads):
 def generate_summary(results: list[dict]) -> dict:
     """Aggregate metrics by configuration."""
     from collections import defaultdict
-    
+
     by_config = defaultdict(list)
     for r in results:
-        key = (r["checkpoint"], r["aggregation"], r["direction"], r["sigmoid"])
+        key = (r["checkpoint"], r["aggregation"], r["direction"])
         by_config[key].append(r)
-    
+
     summary = []
-    for (ckpt, agg, direction, sigmoid), items in by_config.items():
+    for (ckpt, agg, direction), items in by_config.items():
         n = len(items)
         summary.append({
             "checkpoint": ckpt,
             "aggregation": agg,
             "direction": direction,
-            "sigmoid": sigmoid,
+            "score_space": "scaled_0_100",
             "config_desc": items[0]["config_desc"],
             "n": n,
-            # Ranking metrics (mean)
+            # Ranking metrics (gold from is_selected)
             "recall_at_1": np.mean([r["recall_at_1"] for r in items]),
             "mrr": np.mean([r["mrr"] for r in items]),
             "avg_gold_rank": np.mean([r["gold_rank"] for r in items]),
@@ -386,7 +407,7 @@ def generate_summary(results: list[dict]) -> dict:
             "em": np.mean([r["em"] for r in items]),
             "f1": np.mean([r["f1"] for r in items]),
         })
-    
+
     return sorted(summary, key=lambda x: (x["checkpoint"], x["direction"], x["aggregation"]))
 
 
@@ -467,6 +488,10 @@ def main():
                 "date": datetime.now().isoformat(),
                 "n_examples": args.n_examples,
                 "seed": args.seed,
+                "score_space": "scaled_0_100",
+                "gold_label_source": "ms_marco is_selected field",
+                "no_positive_handling": "skipped from dataset (not counted in metrics)",
+                "score_note": "direct_score() returns sigmoid(raw)*100; no further transform applied",
             },
             "results": results,
             "summary": summary,

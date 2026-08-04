@@ -12,9 +12,9 @@
       "finding": "KV-eviction head and passage head achieve identical LITM results (EM=21.7%, gap=0.000)"
     },
     "score_direction_validation": {
-      "description": "Ascending vs descending, mean-raw vs top10-sigmoid across Stage3 and v8b checkpoints",
+      "description": "Ascending vs descending, mean vs top10 aggregation across Stage3 and v8b checkpoints",
       "result_file": "results/score_direction_validation_summary.csv",
-      "finding": "Descending (high-first) is better for EM in both checkpoints; top-10% sigmoid produces degenerate rankings"
+      "finding": "Prior run (commit 24b013a) used passage-0-as-gold and double-sigmoid. Both bugs are corrected at this commit. Direction should be re-validated by rerunning validate_score_direction.py."
     },
     "query_specificity_test": {
       "description": "Correct vs lexically-near wrong query: does the checkpoint learn query-relevant passage ordering?",
@@ -25,11 +25,23 @@
 
   "scoring_contract": {
     "aggregation": "arithmetic mean of all token scores per passage",
-    "score_source": "ImportanceUpdateHead.direct_score(hidden) — raw logits (no sigmoid)",
-    "direction": "descending (high-first) — validated by score_direction_validation_summary.csv",
+    "score_source": "ImportanceUpdateHead.direct_score(hidden) — sigmoid(raw)*100, values in [0, 100]",
+    "score_space": "scaled_0_100",
+    "direction": "to be re-validated with corrected evaluator (see audit_note)",
     "passage_encoding": "each passage encoded independently (no query context in scoring call)",
     "normalization": "none",
-    "query_relevance_status": "context-utility signal confirmed; calibrated query-relevance NOT demonstrated (see query_specificity_summary.csv, MRR delta=-0.006, 95% CI [-0.051, +0.041])"
+    "gold_label_source": "ms_marco is_selected field (NOT passage index 0)",
+    "query_relevance_status": "context-utility signal confirmed; calibrated query-relevance NOT demonstrated (MRR delta=-0.006, 95% CI [-0.051,+0.041])",
+    "audit_note": "Independent audit (2026-08-04) found: (1) prior direction-validation used passage-0-as-gold — only 14.85% of MS-MARCO examples select passage 0; (2) validate_score_direction.py applied a second sigmoid to already-scaled [0,100] scores, producing near-tied degenerate rankings. Both issues are corrected in this revision. Direction claim should be re-validated by rerunning validate_score_direction.py at this commit.",
+    "validation_scripts": [
+      "scripts/validate_score_direction.py",
+      "scripts/test_query_specificity.py"
+    ],
+    "validation_results": [
+      "results/score_direction_validation_summary.csv",
+      "results/query_specificity_summary.csv"
+    ],
+    "github": "https://github.com/nitroxido/token-importance-scoring"
   },
 
   "checkpoints": {
