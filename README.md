@@ -1,9 +1,10 @@
 # Token Importance Scoring for KV Cache Compression and Position Bias Elimination
 
-A learned mechanism for efficient long-context inference in large language models. TIS scores token importance at query time, enabling two distinct capabilities:
+A learned mechanism for efficient long-context inference in large language models. TIS scores token importance at query time, enabling three distinct capabilities:
 
 1. **KV cache compression**: retain critical context at aggressive budgets (NIAH benchmark)
 2. **Passage reordering**: eliminate Lost-in-the-Middle position bias in RAG pipelines
+3. **Supervised passage ranking**: TIS v2.2 — query-aware cross-attention, beats BM25 on MS-MARCO
 
 ## Overview
 
@@ -14,6 +15,7 @@ A learned mechanism for efficient long-context inference in large language model
 | Passage reordering | LITM gap | **0.000** | 0.050 |
 | Passage reordering | EM all positions | **21.7%** | 16.7% |
 | Speculative decoding | Accept length | **6.57/8** | 5.80/8 |
+| **Passage ranking (v2.2)** | **Test MRR** | **0.471** | BM25 0.432 (+9.1%) |
 
 Consumer GPU compatible (validated on RTX 5070, 8 GB VRAM).
 
@@ -34,7 +36,7 @@ An additional internal run at n=100 with lambda_d=0.0 confirmed baseline behavio
 
 TIS scores token importance over final-layer hidden states and aggregates per-passage (arithmetic mean, descending). This eliminates the Lost-in-the-Middle position bias documented in Liu et al. (2023) without requiring query-specific retraining.
 
-**Scoring contract**: each passage is encoded independently; the scorer's `direct_score()` path does not use query context. Score direction has been validated: descending (high-first) outperforms ascending for EM on both Stage3 and v8b checkpoints (`results/score_direction_validation_summary.csv`).
+**Scoring contract**: each passage is encoded independently; the scorer's `direct_score()` path does not use query context. Score direction for ERT-trained checkpoints (Stage3, v8b): an independent audit (2026-08-04) identified evaluation contract bugs in the direction-validation script; direction for these checkpoints is to be re-validated. For **TIS v2.2** (supervised training), direction is established by construction — see the TIS v2.2 section above.
 
 **Passage reordering results** (MS-MARCO, 60 queries × 3 positions = 180 test cases, seed=42):
 
@@ -117,25 +119,66 @@ All commands in this README are backed by scripts under `scripts/` and modules u
 ## Pre-trained Checkpoints
 
 ```bash
+# TIS v2.2: Supervised passage ranking (beats BM25 +9.1% MRR)
+hf download oldman-dev/tis-v2.2-passage-reranker --local-dir checkpoints/v2.2_query_aware_mean
+
 # Main NIAH + passage reordering checkpoint
 hf download oldman-dev/tis-stage3-ert --local-dir checkpoints/stage3_ert
 
 # V8b hard-anchor (best evidence survival @ 25%)
 hf download oldman-dev/tis-v8b-hard-anchor --local-dir checkpoints/v8b_hard_anchor
 
-# Query-aware passage reranker (dedicated passage reordering head)
+# Query-aware passage reranker (TIS 2.0 — LITM elimination)
 hf download oldman-dev/tis-passage-reranker --local-dir checkpoints/passage_reranker
 
 # Oracle baseline
 hf download oldman-dev/tis-stage1-oracle --local-dir checkpoints/stage1_oracle
 ```
 
-| Checkpoint | NIAH @ 50% | LITM gap | Passage EM | Notes |
+| Checkpoint | Task | Key Metric | Notes |
+|---|---|---|---|
+| **`tis-v2.2-passage-reranker`** | Passage ranking | **Test MRR 0.471** | Supervised; beats BM25 +9.1% |
+| `tis-stage3-ert` | KV compression + LITM | NIAH 74% / LITM gap 0.000 | ERT trained; context-utility signal |
+| `tis-v8b-hard-anchor` | KV compression | NIAH 82% @ 25% budget | Best evidence survival |
+| `tis-passage-reranker` | LITM elimination | LITM gap 0.000 / EM 21.7% | TIS 2.0; dedicated LITM head |
+| `tis-stage1-oracle` | Oracle baseline | — | Reference only |
+
+## TIS v2.2: Supervised Passage Ranking
+
+TIS v2.2 introduces supervised training on MS-MARCO relevance labels, resolving the direction ambiguity of earlier checkpoints and enabling calibrated passage relevance scoring.
+
+**Architecture**: `QueryAwareImportanceHead` — 4-head cross-attention from passage tokens to query representation, followed by a 3-layer MLP scorer. Score direction is established by construction: training objective maximises `score(relevant) − score(distractor)`, so **high-first (descending) is unambiguous**.
+
+**Results** (500 locked test queries, seed=42, BM25 baseline = 0.432):
+
+| Method | MRR | Recall@1 | Recall@5 | NDCG@5 |
 |---|---|---|---|---|
-| `tis-stage3-ert` | 74% | 0.000 | 21.7% | Main checkpoint, also works for reordering |
-| `tis-v8b-hard-anchor` | 78% | — | — | Best evidence survival @ 25% budget |
-| `tis-passage-reranker` | — | 0.000 | 21.7% | Dedicated passage reordering head |
-| `tis-stage1-oracle` | — | — | — | Oracle baseline |
+| BM25 | 0.432 | 0.205 | 0.532 | — |
+| TF-IDF | 0.369 | 0.144 | 0.428 | — |
+| **TIS v2.2 (high-first)** | **0.471** | **0.253** | **0.795** | **0.529** |
+
+Direction tuning (500 tune queries): mean+high_first (MRR 0.440) decisively beats mean+low_first (MRR 0.271), confirming direction.
+
+Full results: [`results/v2.2_test_final_results.json`](results/v2.2_test_final_results.json) · direction tuning: [`results/v2.2_direction_tuning_summary.json`](results/v2.2_direction_tuning_summary.json) · baselines: [`results/v2.2_baselines_summary.csv`](results/v2.2_baselines_summary.csv)
+
+```bash
+# Download v2.2 checkpoint
+hf download oldman-dev/tis-v2.2-passage-reranker \
+    --local-dir checkpoints/v2.2_query_aware_mean
+
+# Re-run test evaluation (requires data/msmarco_relevance/test.parquet)
+python scripts/evaluate_test_set_v2.2.py \
+    --checkpoint checkpoints/v2.2_query_aware_mean/final/tis_components.pt \
+    --data-path data/msmarco_relevance/test.parquet
+
+# Train from scratch (requires base checkpoint)
+python scripts/train_supervised_relevance_v2.2_query_aware.py \
+    --base-checkpoint checkpoints/stage3_ert \
+    --output-dir checkpoints/my_v2.2 \
+    --aggregation mean --max-steps 1000
+```
+
+**Release status**: Tier 2 Conditional — MRR 0.471 beats BM25 but falls short of Tier 1 target (0.50). TIS v2.3 (scaling to 200K queries, 2000+ steps) is in progress.
 
 ## Evaluation
 

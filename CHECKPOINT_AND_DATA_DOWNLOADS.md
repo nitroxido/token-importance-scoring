@@ -5,6 +5,12 @@ Pre-computed evaluation artifacts (CSVs, metadata JSONs) are included in the `re
 
 ## Option 1: Download Pre-trained Checkpoints from HuggingFace Hub
 
+**TIS v2.2 Supervised Passage Reranker (NEW — beats BM25 +9.1% MRR):**
+```bash
+huggingface-cli download oldman-dev/tis-v2.2-passage-reranker \
+    --local-dir checkpoints/v2.2_query_aware_mean
+```
+
 **Stage 3 ERT Learned (KV compression + zero-shot LITM transfer):**
 ```bash
 huggingface-cli download oldman-dev/tis-stage3-ert --local-dir checkpoints/stage3_ert
@@ -15,7 +21,7 @@ huggingface-cli download oldman-dev/tis-stage3-ert --local-dir checkpoints/stage
 huggingface-cli download oldman-dev/tis-v8b-hard-anchor --local-dir checkpoints/v8b_hard_anchor
 ```
 
-**Passage Reranker (TIS 2.0 — dedicated LITM head):**
+**Passage Reranker (TIS 2.0 — dedicated LITM elimination head):**
 ```bash
 huggingface-cli download oldman-dev/tis-passage-reranker --local-dir checkpoints/passage_reranker
 ```
@@ -29,6 +35,9 @@ Pre-computed results and evaluation metadata are already in `results/`:
 | File | Description |
 |---|---|
 | `results/eval_manifest.json` | SHA256 hashes for all checkpoints, source commit, environment |
+| `results/v2.2_test_final_results.json` | TIS v2.2 test-set results (MRR=0.471, n=483, seed=42) |
+| `results/v2.2_direction_tuning_summary.json` | v2.2 direction tuning (mean+high_first wins) |
+| `results/v2.2_baselines_summary.csv` | BM25, TF-IDF, length, random baselines on tune+test |
 | `results/litm_with_baselines_summary.csv` | 4-pipeline LITM results (Recall@1, MRR, EM, F1) |
 | `results/litm_per_example_breakdown.csv` | Per-example predictions, transitions, gold answers |
 | `results/litm_paired_summary.csv` | Paired position sweep (validates gap is not difficulty confound) |
@@ -36,6 +45,21 @@ Pre-computed results and evaluation metadata are already in `results/`:
 
 ## Option 3: Re-run Evaluation (GPU Required)
 
+### TIS v2.2 Passage Ranking
+```bash
+# Download checkpoint
+huggingface-cli download oldman-dev/tis-v2.2-passage-reranker \
+    --local-dir checkpoints/v2.2_query_aware_mean
+
+# Evaluate on test set (requires data/msmarco_relevance/test.parquet)
+python scripts/evaluate_test_set_v2.2.py \
+    --checkpoint checkpoints/v2.2_query_aware_mean/final/tis_components.pt \
+    --data-path data/msmarco_relevance/test.parquet
+
+# Expected: MRR ≈ 0.471 (+9.1% vs BM25 0.432)
+```
+
+### LITM and NIAH Benchmarks
 ```bash
 # Download checkpoint
 huggingface-cli download oldman-dev/tis-v8b-hard-anchor --local-dir checkpoints/v8b_hard_anchor

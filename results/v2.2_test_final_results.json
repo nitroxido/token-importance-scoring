@@ -1,0 +1,30 @@
+{
+  "config": {
+    "aggregation": "mean",
+    "direction": "high_first",
+    "checkpoint": "checkpoints/v2.2_query_aware_mean/final/tis_components.pt",
+    "base_model": "unsloth/mistral-7b-instruct-v0.3-bnb-4bit"
+  },
+  "metrics": {
+    "mrr": 0.47146389956948936,
+    "recall@1": 0.2525879917184265,
+    "recall@3": 0.577639751552795,
+    "recall@5": 0.7950310559006211,
+    "ndcg@5": 0.5291427130191686,
+    "ndcg@10": 0.5977310075591488,
+    "num_queries": 483
+  },
+  "baseline_comparison": {
+    "bm25_mrr": 0.432,
+    "tis_mrr": 0.47146389956948936,
+    "difference": 0.03946389956948937,
+    "percent_change": 9.135161937381799,
+    "beats_baseline": true
+  },
+  "release_criteria": {
+    "target_mrr": 0.5,
+    "achieved_mrr": 0.47146389956948936,
+    "meets_tier1": false,
+    "meets_tier2": true
+  }
+}
