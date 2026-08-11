@@ -1,0 +1,22 @@
+{
+  "config": {
+    "aggregation": "mean",
+    "direction": "high_first",
+    "architecture": "QueryAwareImportanceHead (mean pooling)",
+    "optimization": "batch_tokenization"
+  },
+  "metrics": {
+    "mrr": 0.5101523217982845,
+    "recall_1": 0.3022774327122153,
+    "recall_3": 0.6211180124223602,
+    "recall_5": 0.8074534161490683,
+    "ndcg_5": 0.19274692517964057,
+    "ndcg_10": 0.161037579696749,
+    "num_queries": 500,
+    "num_valid_queries": 483
+  },
+  "separator": {
+    "found": 3935,
+    "not_found": 37
+  }
+}
