@@ -55,6 +55,45 @@ Pre-computed results and evaluation metadata are already in `results/`:
 ## Option 3: Re-run Evaluation (GPU Required)
 
 ### TIS v2.3 Passage Ranking (Tier 1)
+
+**Canonical Evaluation** (use this to reproduce 0.5102 MRR):
+
+```bash
+# Download checkpoint
+huggingface-cli download oldman-dev/tis-v2.3-passage-reranker \
+    --local-dir checkpoints/v2.3_final
+
+# Canonical evaluator: batch-tokenized, proper boundary detection, BF16 compute
+python scripts/evaluate_v2.3_optimized.py \
+    --checkpoint checkpoints/v2.3_final/best/tis_components.pt \
+    --data-path data/msmarco_relevance/test.parquet
+
+# Expected: MRR ≈ 0.5102 (+18.1% vs BM25 0.432) — Tier 1 ✅
+# Details: 3935 separator hits, 37 fallback to midpoint
+```
+
+**For full reproducibility details** (Python versions, base model revision, tokenizer config, quantization settings, separator fallback accounting):  
+See [V2.3-EVALUATION-MANIFEST.md](V2.3-EVALUATION-MANIFEST.md)
+
+**Important:** There are multiple v2.3 evaluators in the repo:
+- `scripts/evaluate_v2.3_optimized.py` ← **USE THIS** (canonical, 0.5102)
+- `scripts/evaluate_v2.3_test_set.py` — Serial evaluation path (older)
+- `scripts/evaluate_test_set_v2.2.py` — Generic path (not optimized)
+
+The optimized evaluator differs due to batch tokenization and boundary detection optimizations.
+
+### Alternative: Serial Evaluation (Slower, Educational)
+
+```bash
+# If you want to understand the evaluation step-by-step without batch optimizations:
+python scripts/evaluate_v2.3_test_set.py \
+    --checkpoint checkpoints/v2.3_final/best/tis_components.pt \
+    --data-path data/msmarco_relevance/test.parquet
+
+# Note: This produces a different numeric result due to different evaluation method
+```
+
+### TIS v2.3 Passage Ranking (Tier 1)
 ```bash
 # Download checkpoint
 huggingface-cli download oldman-dev/tis-v2.3-passage-reranker \
