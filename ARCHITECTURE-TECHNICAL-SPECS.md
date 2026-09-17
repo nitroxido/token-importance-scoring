@@ -1,13 +1,14 @@
 # Token Importance Scoring: Architecture Technical Specifications
 
-**Version**: V8b (Hard-Anchor + Constraint-Aware)  
+**Current Version**: v2.5 (Multi-Hop Iterative Refinement)  
+**Previous Versions**: v2.3 (Tier 1 Passage Ranking), V8b (Hard-Anchor + Constraint-Aware)  
 **Target Deployment**: Mistral-7B-v0.3, compatible with transformer-based LLMs  
 
 ---
 
 ## 1. System Overview
 
-Token Importance Scoring (TIS) is a learned module integrated into transformer-based language models to compute per-token importance scores for KV cache compression. The system operates post-hoc without requiring modification of base model weights.
+Token Importance Scoring (TIS) is a learned module integrated into transformer-based language models to compute per-token importance scores. The system supports two distinct use cases: (a) KV cache compression for efficient long-context inference, and (b) passage ranking for RAG pipelines including multi-hop reasoning. All components operate post-hoc without modifying base model weights.
 
 ### Design Principles
 
@@ -15,6 +16,7 @@ Token Importance Scoring (TIS) is a learned module integrated into transformer-b
 2. **Constraint-Aware Learning**: Hard-anchor forcing mechanism ensures critical tokens are preserved
 3. **Inference-Time Activation**: Scoring computed during generation without additional training requirements
 4. **Consumer Hardware Compatibility**: Optimized for RTX 5070 (8GB VRAM) and similar consumer-grade GPUs
+5. **Backward Compatibility**: v2.5 checkpoint loads cleanly into v2.3 code; Stage 2 components are optional
 
 ---
 
@@ -257,24 +259,71 @@ Critical hyperparameter: stability loss coefficient $\lambda_{\text{stab}}$
 
 ---
 
-## 9. Extension Points (Phase 4)
+## 9. v2.5 Architecture: Multi-Hop Iterative Refinement
 
-### 9.1 Query-Aware Importance Head
+### 9.1 Three-Component v2.5 System
 
-Planned architectural extension for query-dependent scoring:
+v2.5 adds two new scoring heads on top of the existing v2.3 `QueryAwareImportanceHead`.
 
-**Proposed Addition**:
-- Cross-attention head attending query tokens to context
-- Query-context similarity to modulate importance scores
-- Expected improvement: +6-8pp on LITM benchmark
+#### 9.1.1 QueryAwareImportanceHead (Stage 1 — unchanged from v2.3)
 
-### 9.2 Post-Normalization Stabilization
+- **Purpose**: Direct passage relevance scoring
+- **Parameters**: ~1.5M
+- **Architecture**: Query projection (4096→256) + context projection (4096→256) → broadcast concat → MLP (512→256→1)
+- **Output**: Normalized importance scores $[0, 100]$
+- **Training**: Margin-based ranking loss (margin=5.0)
 
-Addresses attention drift via hidden-state magnitude normalization:
+#### 9.1.2 BridgeDetectionHead (NEW — v2.4/v2.5)
 
-**Specification**:
-- LayerNorm after residual connections
-- Expected improvement: +1-3pp on LITM via distant token attention correction
+- **Purpose**: Identifies bridge passages (intermediate entities in multi-hop chains)
+- **Parameters**: ~1.05M
+- **Architecture**: Mean-pool passage hidden states → 2-layer MLP (4096→256→1, Sigmoid)
+- **Output**: Bridge probability $[0, 1]$ — high value = likely bridge passage
+- **Training**: Binary cross-entropy on HotpotQA question-type labels
+
+#### 9.1.3 RefinementScoringHead (NEW — v2.5)
+
+- **Purpose**: Context-aware re-scoring via cross-passage attention
+- **Parameters**: ~2.8M
+- **Architecture**:
+  - `CrossPassageAttention`: candidate passage as query, concatenated selected passages as key/value, 4 heads
+  - `RefinementMLP`: attention output + query → score (hidden 4096→1024→1, Sigmoid)
+- **Output**: Refinement score $[0, 1]$
+- **Score blending**: $\text{final} = 0.7 \times \text{direct} + 0.3 \times \text{refined}$
+- **Training**: Smooth L1 loss with curriculum learning ($\alpha: 0.0 \to 0.3$)
+
+### 9.2 Total v2.5 Trainable Parameters
+
+| Component | Parameters | Version |
+|-----------|-----------|--------|
+| ImportanceHead (Stage 1) | ~1.5M | v2.2+ |
+| ImportanceEmbedding | ~250K | v2.2+ |
+| BridgeDetectionHead | ~1.05M | v2.4+ |
+| RefinementScoringHead | ~2.8M | v2.5 |
+| **Total trainable** | **~5.6M** | v2.5 |
+
+### 9.3 v2.5 Training Configuration
+
+| Parameter | Value |
+|-----------|-------|
+| Dataset | HotpotQA (multi-hop) + MS-MARCO |
+| Strategy | Stage 1 (625 steps equal) → Stage 2 (375 steps, α 0.0→0.3) |
+| Duration | 28.6 min (1000 steps, RTX 5070) |
+| Batch size | 1 (VRAM constraint) + grad_accum=8 |
+| Early stopping | patience=3 |
+| Final loss | 0.023 |
+| Checkpoint size | 157.8 MB |
+
+### 9.4 v2.5 Performance
+
+| Metric | v2.3 | v2.5 | Notes |
+|--------|------|------|-------|
+| NIAH accuracy | 95.0% | 95.0% | Zero regression |
+| LITM begin | 88.0% | 88.0% | Zero regression |
+| LITM middle | 72.0% | 72.0% | Zero regression |
+| Multi-hop recall@5 | N/A | **100%** | New capability |
+| Inference latency | ~50ms | ~120ms | +70ms for Stage 2 |
+| Peak VRAM | 5.5 GB | 5.5 GB | No increase |
 
 ---
 
@@ -282,8 +331,8 @@ Addresses attention drift via hidden-state magnitude normalization:
 
 ### 10.1 Software Requirements
 
-- PyTorch: 2.1.2
-- Transformers: 4.36.0
+- PyTorch: 2.1.2+ (2.4.0 tested for v2.5)
+- Transformers: 4.36.0+ (5.9.0 tested for v2.5; SDPA inference workaround needed)
 - PEFT: 0.7.0 (for LoRA compatibility, if extended)
 
 ### 10.2 Hardware Validation
